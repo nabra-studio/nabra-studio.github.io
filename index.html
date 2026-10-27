@@ -127,6 +127,18 @@ select{appearance:auto}
 .chip[aria-selected="true"],.chip.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 .chip.on small{color:inherit}
 .design{display:grid;gap:10px}
+.cast{display:grid;gap:10px;background:var(--tint);border-radius:12px;padding:14px}
+.cast b{font-family:var(--f-display);font-size:15px}
+.castlist{display:grid;gap:8px}
+.castrow{display:grid;grid-template-columns:minmax(70px,auto) minmax(0,1fr) auto;gap:8px;align-items:center}
+.castrow .who{font-weight:600;display:flex;align-items:center;gap:6px}
+.castrow .who i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.castrow select{background:var(--surface)}
+.toggles{display:grid;gap:6px}
+.mydict{display:grid;gap:6px;border-top:1px solid var(--line);padding-top:10px}
+.mydict b{font-family:var(--f-display);font-size:14px}
+.mydict .keyrow input{min-width:0}
+.dchip{font-family:var(--f-body);direction:rtl}
 .pron{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px}
 .pron h3{font-size:14px;font-family:var(--f-body);font-weight:600}
 .pchip{direction:rtl;font-family:var(--f-body);font-size:14px}
@@ -204,7 +216,8 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
       <div class="editor-head">
         <h2 id="ed-h">السكربت</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn ghost small" id="pronBtn" type="button">صحّح النطق</button>
+          <button class="btn primary small" id="dialBtn" type="button">حوّل للعامية</button>
+          <button class="btn ghost small" id="pronBtn" type="button">شكّل الصعبة</button>
           <button class="btn ghost small" id="fixBtn" type="button">صحّح الملاحظات</button>
           <button class="btn ghost small" id="speakerBtn" type="button">+ شخص</button>
           <button class="btn primary small" id="copyAll" type="button">انسخ السكربت</button>
@@ -255,7 +268,16 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
     <p class="hint" id="lNote">اكتب نصك واختر الصوت واضغط «ولّد». التوليد من حسابك أنت في ElevenLabs بمفتاح API، والمفتاح يبقى في جهازك وما يروح إلا لـ ElevenLabs.</p>
     <div id="lBody" class="lgrid">
       <div class="lcol">
-        <div class="field"><label for="lText">النص</label><textarea id="lText" rows="4">[shocked] من جدك؟ [pause] لا تقول إنك نسيت… [frustrated sigh] تكفى، ترى موب وقتك أبد!</textarea></div>
+        <div class="cast">
+          <div class="editor-head"><b>أصوات الحوار</b><span class="hint">الحوار نفسه من خانة «السكربت» فوق</span></div>
+          <div id="castList" class="castlist"></div>
+          <div class="acts-row">
+            <button class="btn primary" type="button" id="lAll2">ولّد الحوار بهالأصوات</button>
+            <span class="hint" id="castCost"></span>
+          </div>
+          <p class="hint">ما عجبك صوت؟ غيّره من القائمة وولّد مرة ثانية. كل نسخة تنحفظ تحت بأسماء أصواتها عشان تقارن.</p>
+        </div>
+        <div class="field"><label for="lText">أو جرّب جملة وحدة</label><textarea id="lText" rows="4">[shocked] من جدك؟ [pause] لا تقول إنك نسيت… [frustrated sigh] تكفى، ترى موب وقتك أبد!</textarea></div>
         <div class="lrow">
           <div class="field"><label for="lVoice">الصوت</label><select id="lVoice"></select></div>
           <div class="field"><label for="lModel">النموذج</label><select id="lModel"><option value="eleven_v4">v4 (الأحاسيس)</option><option value="eleven_v3">v3</option><option value="eleven_multilingual_v2">Multilingual v2</option></select></div>
@@ -266,7 +288,12 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
           <button class="btn ghost" type="button" id="lAll">ولّد الحوار كامل</button>
           <span class="hint" id="lCost"></span>
         </div>
-        <label class="chk"><input type="checkbox" id="lPron" checked> شكّل الكلمات الصعبة تلقائيًا قبل التوليد (يحسّن النطق السعودي)</label>
+        <div class="toggles">
+          <label class="chk"><input type="checkbox" id="lDial" checked> حوّل الفصحى للعامية قبل التوليد</label>
+          <label class="chk"><input type="checkbox" id="lTag"> قل للصوت يتكلم باللهجة (تجريبي، لو قرا الوسم بصوت عالي طفّه)</label>
+          <label class="chk"><input type="checkbox" id="lPron"> شكّل الكلمات الصعبة تلقائيًا (شغّله بس إذا كلمة انقرت غلط)</label>
+          <span class="hint" id="lDialNote"></span>
+        </div>
         <div class="ai-status" id="lStatus" aria-live="polite"></div>
         <ol class="takes" id="takes"></ol>
       </div>
@@ -283,6 +310,12 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
             <li>أي صوت من المكتبة: افتحه في الموقع واضغط Add to my voices قبل تولّد فيه.</li>
           </ol>
         </details>
+        <div class="mydict">
+          <b>قاموس نطقك</b>
+          <p class="hint">كلمة انقرت غلط؟ اكتبها، واكتب جنبها طريقة نطقها الصح (بالتشكيل أو مثل ما تنقال). تتصلح في كل توليد.</p>
+          <div class="keyrow"><input type="text" id="dFrom" placeholder="عقبة"><input type="text" id="dTo" placeholder="عَقَبة"><button class="btn ghost small" type="button" id="dAdd">أضف</button></div>
+          <div class="chips" id="dList"></div>
+        </div>
         <p class="hint">ولّد جملة جملة ولا تضغط بسرعة ورا بعض. الطلبات الكثيرة بنفس اللحظة تخلي ElevenLabs توقف الحساب المجاني.</p>
       </div>
     </div>
@@ -416,11 +449,18 @@ const PREV={
 };
 // ---- Saudi pronunciation helpers ----
 // Words TTS often misreads in Saudi speech -> the diacritized spelling to send.
-const PRON={"وش":"وِش","ليش":"لِيش","الحين":"الحِين","زين":"زِين","مره":"مَرَّه","مرّه":"مَرَّه","كذا":"كِذا","هذي":"هَذِي","هذولا":"هَذُولا","هذاك":"هَذاك","مدري":"مَدْري","ودي":"وِدِّي","ودّي":"وِدِّي","يبه":"يُبَه","يمه":"يُمَّه","يمّه":"يُمَّه","رجال":"رِجَّال","رجّال":"رِجَّال","عيال":"عْيَال","شفت":"شِفْت","قلت":"قِلْت","سويت":"سَوَّيت","سوّيت":"سَوَّيت","خل":"خَلّ","خلّ":"خَلّ","حيل":"حَيْل","مب":"مُب","موب":"مُوب","شوي":"شْوَي","قاعد":"قَاعِد","تكفى":"تَكْفى","ترى":"تَرى","يالله":"يَالله","يلا":"يَلّا","تبي":"تَبِي","تبغى":"تَبْغَى","أبغى":"أَبْغَى","ابغى":"أَبْغَى","أدري":"أَدْري","ادري":"أَدْري","طيب":"طَيِّب","ابشر":"أَبْشِر","أبشر":"أَبْشِر","حياك":"حَيَّاك","حيّاك":"حَيَّاك","عساك":"عَسَاك","وشلونك":"وِشْلُونَك","إيش":"إِيش","ايش":"إِيش","دحين":"دَحِين","كدا":"كِدا","برضو":"بَرْضُو","مو":"مُو","إيه":"إِيه","ايه":"إِيه","يعني":"يَعْني","أحد":"أَحَد","وين":"وِين","متى":"مِتى","كيفك":"كِيفَك","هلا":"هَلا","غلا":"غَلا","بكرة":"بُكْرَة","بكره":"بُكْرَه","أمس":"أَمْس","توه":"تَوّه","توّه":"تَوّه","بس":"بَس"};
+const PRON={"عقبة":"عَقَبة","عقبه":"عَقَبه","عقبات":"عَقَبات","وش":"وِش","ليش":"لِيش","الحين":"الحِين","زين":"زِين","مره":"مَرَّه","مرّه":"مَرَّه","كذا":"كِذا","هذي":"هَذِي","هذولا":"هَذُولا","هذاك":"هَذاك","مدري":"مَدْري","ودي":"وِدِّي","ودّي":"وِدِّي","يبه":"يُبَه","يمه":"يُمَّه","يمّه":"يُمَّه","رجال":"رِجَّال","رجّال":"رِجَّال","عيال":"عْيَال","شفت":"شِفْت","قلت":"قِلْت","سويت":"سَوَّيت","سوّيت":"سَوَّيت","خل":"خَلّ","خلّ":"خَلّ","حيل":"حَيْل","مب":"مُب","موب":"مُوب","شوي":"شْوَي","قاعد":"قَاعِد","تكفى":"تَكْفى","ترى":"تَرى","يالله":"يَالله","يلا":"يَلّا","تبي":"تَبِي","تبغى":"تَبْغَى","أبغى":"أَبْغَى","ابغى":"أَبْغَى","أدري":"أَدْري","ادري":"أَدْري","طيب":"طَيِّب","ابشر":"أَبْشِر","أبشر":"أَبْشِر","حياك":"حَيَّاك","حيّاك":"حَيَّاك","عساك":"عَسَاك","وشلونك":"وِشْلُونَك","إيش":"إِيش","ايش":"إِيش","دحين":"دَحِين","كدا":"كِدا","برضو":"بَرْضُو","مو":"مُو","إيه":"إِيه","ايه":"إِيه","يعني":"يَعْني","أحد":"أَحَد","وين":"وِين","متى":"مِتى","كيفك":"كِيفَك","هلا":"هَلا","غلا":"غَلا","بكرة":"بُكْرَة","بكره":"بُكْرَه","أمس":"أَمْس","توه":"تَوّه","توّه":"تَوّه","بس":"بَس"};
 // Formal / other-dialect words that break a Saudi script -> Saudi equivalent.
-const NON_SAUDI={"ماذا":"وش","لماذا":"ليش","الآن":"الحين","سوف":"بـ…","جداً":"مرّه / حيل","جدا":"مرّه / حيل","أريد":"أبي / أبغى","هكذا":"كذا","أيضاً":"بعد / كمان","أيضا":"بعد / كمان","ليس":"مو / مب","نعم":"إيه","ذهبت":"رحت","شلون":"وشلون / كيف","شلونك":"وشلونك / كيفك","شلونكم":"وشلونكم / كيفكم","تريد":"تبي / تبغى","أذهب":"أروح","شنهو":"وش هو","هالحين":"الحين","شنو":"وش","وايد":"مرّه / حيل","هسه":"الحين","هلق":"الحين","ازاي":"كيف","عايز":"أبي","كتير":"مرّه","منيح":"زين","شو":"وش"};
+const NON_SAUDI={"شلون":"وشلون / كيف","شلونك":"وشلونك / كيفك","شلونكم":"وشلونكم / كيفكم","شنو":"وش","شنهو":"وش هو","وايد":"مرّه / حيل","هسه":"الحين","هلق":"الحين","هالحين":"الحين","ازاي":"كيف","عايز":"أبي","كتير":"مرّه","منيح":"زين","شو":"وش","هيك":"كذا","ليش لأ":"ليش لا"};
 const AR="\u0621-\u064A\u0671-\u06D3";
 function wordRe(w){return new RegExp("(^|[^"+AR+"\u064B-\u0652])("+w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")(?=$|[^"+AR+"\u064B-\u0652])","g")}
+let MYDICT={}; try{MYDICT=JSON.parse(localStorage.getItem("nabra-mydict")||"{}")}catch(e){}
+function saveDict(){try{localStorage.setItem("nabra-mydict",JSON.stringify(MYDICT))}catch(e){}}
+function applyMine(text){
+  return text.split(/(\[[^\]]*\])/).map(part=>{ if(part.startsWith("[")) return part;
+    for(const [k,v] of Object.entries(MYDICT).sort((a,b)=>b[0].length-a[0].length)) part=part.replace(wordRe(k),(m,a)=>a+v);
+    return part; }).join("");
+}
 function pronScan(text){
   const spoken=text.replace(/\[[^\]]*\]/g," ");
   const fixes=[],warns=[];
@@ -436,6 +476,44 @@ function applyPron(text,only){
     return part;
   }).join("");
 }
+// ---- Fus-ha -> Saudi colloquial converter ----
+const CONV_BASE={"ماذا تفعل":"وش تسوي","ماذا تريد":"وش تبي","ماذا حدث":"وش صار","ماذا":"وش","لماذا":"ليش","كيف حالك":"وشلونك","كيف حالكم":"وشلونكم","الآن":"الحين","حالاً":"الحين","أذهب":"أروح","تذهب":"تروح","يذهب":"يروح","نذهب":"نروح","ذهبت":"رحت","ذهبنا":"رحنا","ذهب":"راح","اذهب":"روح","أريد":"أبي","تريد":"تبي","يريد":"يبي","نريد":"نبي","أفعل":"أسوي","تفعل":"تسوي","يفعل":"يسوي","نفعل":"نسوي","فعلت":"سوّيت","رأيت":"شفت","رأيتك":"شفتك","أرى":"أشوف","انظر":"شوف","لا أعرف":"ما أدري","لا أدري":"ما أدري","لا يوجد":"ما فيه","يوجد":"فيه","ليس لدي":"ما عندي","لدي":"عندي","لديك":"عندك","لدينا":"عندنا","ليس":"مو","ليست":"مو","لست":"مو","هذه":"هذي","هؤلاء":"هذولا","أولئك":"هذولاك","ذلك":"ذاك","تلك":"ذيك","الذي":"اللي","التي":"اللي","الذين":"اللي","نحن":"حنّا","أنتم":"إنتم","أنتِ":"إنتي","جداً":"مرّه","جدا":"مرّه","كثيراً":"مرّه","قليلاً":"شوي","قليلا":"شوي","حسناً":"طيب","حسنا":"طيب","نعم":"إيه","أين":"وين","إلى أين":"وين","من أين":"منين","غداً":"بكرة","غدا":"بكرة","أيضاً":"بعد","أيضا":"بعد","هكذا":"كذا","لكن":"بس","فقط":"بس","انتظر":"اصبر","أعطني":"عطني","متعب":"تعبان","يجب أن":"لازم","يجب":"لازم","لا بد أن":"لازم","ربما":"يمكن","عندما":"لما","حدث":"صار","حقاً":"صدق","حقا":"صدق","مرحباً":"هلا","مرحبا":"هلا","لا تقلق":"لا تشيل هم","سريعاً":"بسرعة","ماذا بك":"وش فيك","ما بك":"وش فيك","إلى هناك":"هناك","إلى هنا":"هنا","متعب":"تعبان","متعبين":"تعبانين","متعبة":"تعبانة","جميل":"حلو","جميلة":"حلوة","سعيد":"مبسوط","سعيدة":"مبسوطة","حزين":"زعلان","غاضب":"معصّب","اجلس":"اقعد","أجلس":"أقعد","انظري":"شوفي","أخبرني":"علّمني","أخبرك":"أعلّمك","لا شيء":"ولا شي","شيء":"شي"};
+const CONV_DIALECT={
+ "حجازي":{"ماذا تفعل":"إيش تسوي","ماذا تريد":"إيش تبغى","ماذا حدث":"إيش صار","ماذا":"إيش","الآن":"دحين","حالاً":"دحين","أريد":"أبغى","تريد":"تبغى","يريد":"يبغى","نريد":"نبغى","هكذا":"كِدا","نحن":"إحنا","أيضاً":"كمان","أيضا":"كمان","ماذا بك":"إيش فيك","ما بك":"إيش فيك","لا أعرف":"ما أدري","جداً":"مرّة","جدا":"مرّة"},
+ "أبيض (سعودي عام)":{"أريد":"أبغى","تريد":"تبغى","يريد":"يبغى","نريد":"نبغى","نحن":"إحنا"},
+ "جنوبي":{"أريد":"أبغى","تريد":"تبغى","يريد":"يبغى","نريد":"نبغى"}
+};
+function convMap(d){return Object.assign({},CONV_BASE,CONV_DIALECT[d]||{})}
+function dialScan(text,d){
+  const spoken=text.replace(/\[[^\]]*\]/g," "); const m=convMap(d); const out=[];
+  for(const [k,v] of Object.entries(m)){ if(wordRe(k).test(spoken)) out.push([k,v]); }
+  if(/(^|\s)سوف\s/.test(spoken)) out.push(["سوف","بـ (مثل: بروح، بسوي)"]);
+  if(/(^|[\s،.؟!])هل\s/.test(spoken)) out.push(["هل","تنشال (السؤال يبان من النبرة)"]);
+  return out;
+}
+function toDialect(text,d){
+  const m=convMap(d); const keys=Object.keys(m).sort((a,b)=>b.length-a.length);
+  return text.split(/(\[[^\]]*\])/).map(part=>{
+    if(part.startsWith("[")) return part;
+    for(const k of keys) part=part.replace(wordRe(k),(x,a)=>a+m[k]);
+    part=part.replace(/(^|\s)سوف\s+أ/g,"$1ب").replace(/(^|\s)سوف\s+ت/g,"$1بت").replace(/(^|\s)سوف\s+ي/g,"$1بي").replace(/(^|\s)سوف\s+ن/g,"$1بن");
+    part=part.replace(/(^|[\s،.؟!])هل\s+/g,"$1");
+    part=part.replace(/(^|\s)أن\s+(?=[نتيأ])/g,"$1");
+    return part;
+  }).join("");
+}
+// Optional direction tag that asks the voice for a casual dialect delivery (experimental).
+const DIAL_TAG={"نجدي":"[casual Najdi Saudi dialect]","أبيض (سعودي عام)":"[casual Saudi dialect]","حجازي":"[casual Hijazi Saudi dialect]","جنوبي":"[casual southern Saudi dialect]","شرقاوي وحساوي":"[casual Eastern Province Saudi dialect]","قصيمي":"[casual Qassimi Najdi dialect]","شمالي":"[casual northern Saudi Bedouin dialect]","بدوي":"[casual Saudi Bedouin dialect]"};
+const DIAL_EXAMPLE={
+ "نجدي":"[curious] وِش فيك ساكت؟ [laughs] لا تقول إنك نسيت الموعد مرّه ثانية… [frustrated sigh] يا رجّال تكفى، ترى ما عاد فيه وقت.",
+ "أبيض (سعودي عام)":"[friendly] هلا والله، كيفك؟ [excited] لازم أعلمك وش صار اليوم، شي ما يتصدق!",
+ "حجازي":"[curious] إيش فيك ساكت؟ [laughs] لا تقول إنك نسيت كمان مرة… [frustrated sigh] يا شيخ دحين وقتها؟",
+ "جنوبي":"[warm] يا هلا وسهلا، حيّاك الله. [friendly] تعال اقلط وتقهوى، ترى الجلسة ما تحلى إلا بوجودك.",
+ "شرقاوي وحساوي":"[warm] هلا والله وغلا، حيّاك. [friendly] اقعد اقعد، القهوة جاهزة والتمر من النخل اللي عندنا.",
+ "قصيمي":"[curious] وين رحتي يا بنيّتي؟ [nervous] أبوتس يدوّر عليتس من الصبح… [whispers] قولي له إنتس عند خالتس.",
+ "شمالي":"[warm] يا هلا والله، حيّ الله من جانا. [calm] الليل في البر غير، والقهوة على النار.",
+ "بدوي":"[proud] يا هلا بالضيف، البيت بيتك. [calm] نشبّ النار ونصبّ القهوة، وحنّا أهل الكرم من أوّل."
+};
 // Inside a Claude viewer the page can't reach ElevenLabs; the downloaded file can.
 const IN_VIEWER=!!window.claude;
 const spkVoice={}; try{Object.assign(spkVoice,JSON.parse(localStorage.getItem("nabra-spkvoice")||"{}"))}catch(e){}
@@ -524,9 +602,11 @@ function lint(p,text){
   const letters=(text.match(/[ء-ي]/g)||[]).length, har=(text.match(/[ً-ْ]/g)||[]).length;
   if(letters>40 && har/letters>.18) issues.push(["warn","تشكيل كثير","شكّل الكلمات اللي تنقرى غلط بس، مو الكلام كله."]);
   if(/\[[^\]]*$/m.test(text)||/^[^\[]*\]/m.test(text)) issues.push(["bad","قوس ناقص","فيه إحساس ما تسكّر قوسه."]);
+  const ds=dialScan(text,dsel.value);
+  if(ds.length) issues.push(["bad","النص فيه فصحى ("+ar(ds.length)+" كلمة)","الصوت بيقراه فصحى. اضغط «حوّل للعامية»، أو غيّرها بنفسك: "+ds.slice(0,4).map(x=>x[0]+" ← "+x[1]).join("، ")+"."]);
   const pr=pronScan(text);
   pr.warns.forEach(([w,s])=>issues.push(["bad","كلمة مو سعودية: «"+w+"»","قلها بالسعودي: "+s+". الكلام الفصيح أو من لهجة ثانية يخرّب نطق الصوت."]));
-  if(pr.fixes.length) issues.push(["warn","كلمات تحتاج تشكيل ("+ar(pr.fixes.length)+")","الصوت ممكن يقراها فصحى أو غلط. اضغط «صحّح النطق» أو اختر كلمة كلمة تحت."]);
+  if(pr.fixes.length) issues.push(["warn","كلمات ممكن تنقرا غلط ("+ar(pr.fixes.length)+")","شكّل بس الكلمة اللي انقرت غلط فعلًا. التشكيل الكثير يخلي الصوت يقرا فصحى."]);
   if(p.lines.length>1){const es=p.lines.map(L=>energy(L.tags)); if(Math.max(...es)-Math.min(...es)<.2) issues.push(["warn","الإحساس ثابت","نوّع بين جمل هادية وجمل حماس، الصوت يصير أحيا."]);}
   return issues;
 }
@@ -544,8 +624,24 @@ function update(){
   else if(!iss.length){const li=document.createElement("li");li.className="good";li.innerHTML="<b>جاهز</b><span>ما فيه ملاحظات. جرّب أول جملة لحالها قبل تولّد الكل.</span>";ul.appendChild(li)}
   iss.slice(0,8).forEach(([k,a,b])=>{const li=document.createElement("li");li.className=k;const x=document.createElement("b");x.textContent=a;const y=document.createElement("span");y.textContent=b;li.append(x,y);ul.appendChild(li)});
   if(iss.length>8){const li=document.createElement("li");li.className="warn";li.textContent="و"+ar(iss.length-8)+" ملاحظات ثانية. اضغط «صحّح الملاحظات».";ul.appendChild(li)}
-  drawMap(p); drawSpk(p); drawPron(text);
+  drawMap(p); drawSpk(p); drawPron(text); drawCast(p);
 }
+function voiceOptions(sel){return '<option value="">اختر صوت…</option>'+KINDS.slice(1).map(([k,l])=>{const vs=VOICES.filter(v=>v[0]===k&&v[4]);return vs.length?'<optgroup label="'+l+'">'+vs.map(v=>'<option value="'+v[4]+'"'+(sel===v[4]?" selected":"")+'>'+esc(v[1])+' · '+esc(v[2])+'</option>').join("")+'</optgroup>':""}).join("")}
+function drawCast(p){
+  const box=$("#castList"); if(!box) return; box.innerHTML="";
+  const sp=p.speakers.filter(s=>p.lines.some(l=>l.speaker===s));
+  if(!sp.length){box.innerHTML='<p class="hint">اكتب أو الصق الحوار في خانة «السكربت» فوق.</p>';return}
+  sp.forEach((s,i)=>{
+    const r=document.createElement("div");r.className="castrow";
+    const w=document.createElement("span");w.className="who";w.innerHTML='<i style="background:'+color(p.speakers.indexOf(s))+'"></i>';w.append(s);
+    const sel=document.createElement("select");sel.setAttribute("aria-label","صوت "+s);sel.innerHTML=voiceOptions(spkVoice[s]);
+    sel.onchange=()=>{spkVoice[s]=sel.value;try{localStorage.setItem("nabra-spkvoice",JSON.stringify(spkVoice))}catch(e){};drawSpkSync()};
+    const pb=document.createElement("button");pb.type="button";pb.className="btn ghost small";pb.textContent="▶";pb.title="اسمع عينة الصوت";
+    pb.onclick=()=>{if(sel.value&&PREV[sel.value]) playPreview(sel.value,pb); else toast("اختر صوت فيه عينة")};
+    r.append(w,sel,pb);box.appendChild(r)});
+  const chars=p.lines.reduce((a,l)=>a+l.spoken.length,0);$("#castCost").textContent="≈ "+ar(chars)+" كردت لكل مرة";
+}
+function drawSpkSync(){document.querySelectorAll('#spk select').forEach(x=>{const s=(x.getAttribute("aria-label")||"").replace(/^صوت /,"");if(spkVoice[s]!==undefined)x.value=spkVoice[s]})}
 function drawPron(text){
   const {fixes}=pronScan(text); const box=$("#pron"), c=$("#pronChips"); c.innerHTML="";
   box.hidden=!fixes.length;
@@ -579,7 +675,7 @@ function drawSpk(p){
     c.querySelector("pre").textContent=lines.join("\n");
     const sel=document.createElement("select");sel.setAttribute("aria-label","صوت "+s);
     sel.innerHTML='<option value="">اختر صوت لـ'+esc(s)+'…</option>'+KINDS.slice(1).map(([k,l])=>'<optgroup label="'+l+'">'+VOICES.filter(v=>v[0]===k&&v[4]).map(v=>'<option value="'+v[4]+'"'+(spkVoice[s]===v[4]?" selected":"")+'>'+esc(v[1])+'</option>').join("")+'</optgroup>').join("");
-    sel.onchange=()=>{spkVoice[s]=sel.value;try{localStorage.setItem("nabra-spkvoice",JSON.stringify(spkVoice))}catch(e){}};
+    sel.onchange=()=>{spkVoice[s]=sel.value;try{localStorage.setItem("nabra-spkvoice",JSON.stringify(spkVoice))}catch(e){};drawCast(parse(ta.value))};
     c.appendChild(sel);
     const b=document.createElement("button");b.className="btn ghost small";b.type="button";b.textContent="انسخ";b.onclick=()=>copy(lines.join("\n"),"نسخت جمل "+s);
     c.querySelector("header").appendChild(b); box.appendChild(c)});
@@ -644,8 +740,10 @@ const DIALECT_HINTS={
 const RULES=d=>`القواعد:
 - اكتب باللهجة السعودية (${d}) العامية الطبيعية فقط. ممنوع الفصحى، وممنوع مفردات خليجية أو شامية أو مصرية (مثل شلون، شنو، وايد، شو، ازاي).
 - ${DIALECT_HINTS[d]||""}
-- شكّل الكلمات اللي ينقراها الصوت فصحى أو غلط، مثل: وِش، لِيش، الحِين، زِين، مَرَّه، كِذا، هَذِي، مَدْري، رِجَّال، تَكْفى، تَرى، مُو، يَلّا. ولا تشكّل الكلام كله.
-- اكتب الكلمة مثل ما تنقال، مو مثل ما تنكتب في الفصحى.
+- اكتب الكلمة مثل ما تنقال في السوالف، مو مثل ما تنكتب في الفصحى. هذي كلمات فصحى ممنوعة: ماذا، لماذا، سوف، الآن، الذي، التي، ليس، هل، نحن، أريد، جداً، هكذا، لكن، يجب.
+- لا تشكّل الكلام. التشكيل الكثير يخلي الصوت يقرا فصحى. شكّل بس الكلمة اللي ممكن تنقرا غلط (مثل: عَقَبة مو عُقبة).
+- خلّ الجمل قصيرة ومتقطعة مثل الكلام الطبيعي، فيها «…» وتردد وكلمات زي: يعني، ترى، والله، يا رجّال.
+- هذا مثال على الأسلوب المطلوب بالضبط: ${DIAL_EXAMPLE[d]||DIAL_EXAMPLE["نجدي"]}
 - قبل كل جملة حط الإحساس بالإنجليزي بين قوسين مربعين، مثل [whispers] أو [excited] أو [nervous, sighs]. وغيّر الإحساس داخل الجملة إذا تغيّر الكلام.
 - استخدم الأحاسيس المجرّبة: whispers, laughs, laughs quietly, nervous, sighs, shocked, curious, excited, shouting, out of breath, screaming with joy, pause، وللشرح: clear, calm, warm, friendly, explaining, reassuring, playful, confident.
 - حط «…» مكان الوقفات والتردد، ونوّع الإحساس بين الجمل (هادي ثم حماس) عشان الصوت يصير حي.
@@ -703,6 +801,7 @@ async function run(prompt,label){
 function clean(t){return t.replace(/^```[a-z]*\n?|```$/gm,"").trim()}
 $("#aiForm").addEventListener("submit",e=>{e.preventDefault();run(writePrompt(),"write")});
 fixBtn.onclick=()=>run(fixPrompt(),"fix");
+$("#dialBtn").onclick=()=>{const n=dialScan(ta.value,dsel.value).length; if(!n){toast("الكلام عامي، ما فيه فصحى");return} ta.value=toDialect(ta.value,dsel.value); update(); toast("حوّلت "+ar(n)+" كلمات للعامية")};
 $("#pronBtn").onclick=()=>{const n=pronScan(ta.value).fixes.length; if(!n){toast("ما فيه كلمات تحتاج تشكيل");return} ta.value=applyPron(ta.value); update(); toast("شكّلت "+ar(n)+" كلمات")};
 
 // ---- Listen: ElevenLabs text-to-speech with the viewer's own key ----
@@ -731,12 +830,18 @@ function errText(st,body){
   if(st===401) return "المفتاح غلط أو ما فيه صلاحية Text to Speech.";
   if(/quota|credit/i.test(code+msg)) return "خلص رصيد الكردت في حسابك.";
   if(/unusual|free tier/i.test(msg)) return "ElevenLabs أوقفت الباقة المجانية في حسابك بسبب نشاط غير معتاد. راسل دعمهم.";
-  if(/library|paid|subscription/i.test(code+msg)) return "هذا الصوت يحتاج اشتراك مدفوع عشان يشتغل عن طريق المفتاح. جرّب صوت ثاني أو استخدمه من الموقع.";
+  if(/library|paid|subscription|free users/i.test(code+msg)) return "حسابك المجاني ما يسمح بأصوات المكتبة عن طريق المفتاح. الحل: اضغط «انسخ السكربت» وولّده من موقع ElevenLabs نفسه (مجاني هناك)، أو اشترك في أرخص باقة.";
   if(st===404||/voice_not_found|not found/i.test(code+msg)) return "الصوت مو في أصواتك. افتحه في موقع ElevenLabs واضغط Add to my voices.";
   if(st===429) return "طلبات كثيرة. انتظر دقيقة وجرب.";
   return "صار خطأ ("+st+"). "+msg.slice(0,140);
 }
-function prepText(t){return $("#lPron").checked?applyPron(t):t}
+function prepText(t){
+  t=applyMine(t);
+  if($("#lDial").checked) t=toDialect(t,dsel.value);
+  if($("#lPron").checked) t=applyPron(t);
+  if($("#lTag").checked && DIAL_TAG[dsel.value] && !/^\s*\[casual/.test(t)) t=DIAL_TAG[dsel.value]+" "+t;
+  return t;
+}
 async function tts(text,id,model,withLang){
   const body={text,model_id:model}; if(withLang) body.language_code="ar";
   let r;
@@ -757,7 +862,7 @@ function addTake(blob,label,text){
 function guard(){
   if(IN_VIEWER){toast("التوليد يشتغل من ملف الصفحة على المتصفح");return false}
   if(busy){toast("انتظر يخلص التوليد الحالي");return false}
-  if(lKey.value.trim().length<10){lKey.focus();lStatus.textContent="حط مفتاح ElevenLabs أول.";return false}
+  if(lKey.value.trim().length<10){lKey.focus();lKey.scrollIntoView({behavior:"smooth",block:"center"});lStatus.textContent="باقي خطوة وحدة: الصق مفتاح ElevenLabs في الخانة اللي على اليسار، والطريقة مكتوبة تحتها.";toast("الصق مفتاح ElevenLabs أول");return false}
   return true;
 }
 $("#lGen").onclick=async()=>{
@@ -771,20 +876,26 @@ $("#lAll").onclick=async()=>{
   if(!guard()) return;
   const p=parse(ta.value); if(!p.lines.length){lStatus.textContent="السكربت فاضي.";return}
   const missing=p.speakers.filter(s=>p.lines.some(l=>l.speaker===s)&&!spkVoice[s]);
-  if(missing.length){lStatus.textContent="اختر صوت لـ: "+missing.join("، ")+" من قسم «جاهز للصق».";$("#spk").scrollIntoView({behavior:"smooth",block:"center"});return}
+  if(missing.length){lStatus.textContent="اختر صوت لـ: "+missing.join("، ")+" من قسم «جاهز للصق».";$("#castList").scrollIntoView({behavior:"smooth",block:"center"});return}
   busy=true; const parts=[];
   try{
     for(let i=0;i<p.lines.length;i++){const L=p.lines[i]; lStatus.textContent="يولّد جملة "+ar(i+1)+" من "+ar(p.lines.length)+" ("+L.speaker+")…";
       parts.push(await tts(prepText(L.text),spkVoice[L.speaker],$("#lModel").value,true));
       await new Promise(r=>setTimeout(r,700));}
-    addTake(new Blob(parts,{type:"audio/mpeg"}),"الحوار كامل",p.lines.map(l=>l.spoken).join(" ")); lStatus.textContent="تم الحوار كامل.";
+    addTake(new Blob(parts,{type:"audio/mpeg"}),"الحوار: "+[...new Set(p.lines.map(l=>l.speaker))].map(s=>s+" = "+vName(spkVoice[s]).split(" ")[0]).join("، "),p.lines.map(l=>l.spoken).join(" ")); lStatus.textContent="تم الحوار كامل.";
   }catch(e){lStatus.textContent=(e.message||"تعذّر الاتصال")+(parts.length?" (وقف بعد "+ar(parts.length)+" جمل)":"")}
   finally{busy=false}
 };
+$("#lAll2").onclick=()=>$("#lAll").click();
 if(IN_VIEWER){
   $("#lNote").textContent="التوليد ما يشتغل داخل Claude. نزّل ملف الصفحة وافتحه على المتصفح، وكل شي هنا يشتغل وتسمع الصوت مباشرة.";
   $("#lBody").hidden=true;
 }
+function drawDict(){const box=$("#dList");box.innerHTML="";
+  Object.entries(MYDICT).forEach(([k,v])=>{const b=document.createElement("button");b.type="button";b.className="chip dchip";b.title="اضغط للحذف";b.textContent=k+" ← "+v+"  ✕";b.onclick=()=>{delete MYDICT[k];saveDict();drawDict()};box.appendChild(b)});}
+$("#dAdd").onclick=()=>{const k=$("#dFrom").value.trim(),v=$("#dTo").value.trim(); if(!k||!v){toast("اكتب الكلمة وطريقة نطقها");return} MYDICT[k]=v;saveDict();drawDict();$("#dFrom").value="";$("#dTo").value="";toast("أضفت: "+k+" ← "+v)};
+function dialNote(){$("#lDialNote").textContent="اللهجة الحالية: "+dsel.value+" (تغيّرها من فوق)"}
+dsel.addEventListener("change",dialNote); dialNote(); drawDict();
 keyState();
 
 drawVoices(); drawDesign(0); update();
