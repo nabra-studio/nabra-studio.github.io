@@ -266,7 +266,7 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
       <h2 id="l-h">اسمع الصوت</h2>
       <span class="pill" id="keyState">بدون مفتاح</span>
     </div>
-    <p class="hint" id="lNote">اكتب نصك واختر الصوت واضغط «ولّد». التوليد من حسابك أنت في ElevenLabs بمفتاح API، والمفتاح يبقى في جهازك وما يروح إلا لـ ElevenLabs.</p>
+    <p class="hint" id="lNote">اكتب نصك واضغط «قل نصّي» ويتكلم على طول. بدون مفتاح يقوله صوت المتصفح المجاني. ولو تبي أصوات ElevenLabs (ماجد، رائد، نوره…) بإحساس حقيقي، حط مفتاحك على اليسار. المفتاح يبقى في جهازك وما يروح إلا لـ ElevenLabs.</p>
     <div id="lBody" class="lgrid">
       <div class="lcol">
         <div class="cast">
@@ -649,7 +649,7 @@ function drawCast(p){
     pb.onclick=()=>sayLines(s);
     const sb=document.createElement("button");sb.type="button";sb.className="btn ghost small";sb.textContent="عينة";sb.title="عينة صاحب الصوت (ببلاش)";
     sb.onclick=()=>{if(sel.value&&PREV[sel.value]) playPreview(sel.value,sb); else toast("اختر صوت فيه عينة")};
-    sel.addEventListener("change",()=>{ if(!IN_VIEWER && sel.value && lKey.value.trim().length>10) sayLines(s); });
+    sel.addEventListener("change",()=>{ if(!IN_VIEWER && sel.value) sayLines(s); });
     r.append(w,sel,pb,sb);box.appendChild(r)});
   const chars=p.lines.reduce((a,l)=>a+l.spoken.length,0);$("#castCost").textContent="≈ "+ar(chars)+" كردت لكل مرة";
 }
@@ -711,7 +711,7 @@ function drawVoices(){
     const a=c.querySelector(".acts");
     if(!IN_VIEWER){
       if(PREV[id]){const bp=document.createElement("button");bp.type="button";bp.className="btn ghost small";bp.textContent="▶ اسمع";bp.onclick=()=>playPreview(id,bp);a.appendChild(bp)}
-      if(id){const bt=document.createElement("button");bt.type="button";bt.className="btn primary small";bt.textContent="قل نصّي بهالصوت";bt.onclick=()=>{$("#lVoice").value=id;$("#listen").scrollIntoView({behavior:"smooth",block:"start"}); if(lKey.value.trim().length>10 && $("#lText").value.trim()) $("#lGen").click(); else $("#lText").focus()};a.appendChild(bt)}
+      if(id){const bt=document.createElement("button");bt.type="button";bt.className="btn primary small";bt.textContent="قل نصّي بهالصوت";bt.onclick=()=>{$("#lVoice").value=id;$("#listen").scrollIntoView({behavior:"smooth",block:"start"}); if($("#lText").value.trim()) $("#lGen").click(); else $("#lText").focus()};a.appendChild(bt)}
     }
     const b1=document.createElement("button");b1.type="button";b1.className="btn ghost small";b1.textContent="انسخ الاسم";b1.onclick=()=>copy(n,"نسخت: "+n);a.appendChild(b1);
     if(id){const b2=document.createElement("button");b2.type="button";b2.className="btn ghost small";b2.textContent="Voice ID";b2.title=id;b2.onclick=()=>copy(id,"نسخت الـ ID");a.appendChild(b2)}
@@ -829,7 +829,7 @@ function playPreview(id,btn){
   }catch(e){toast("ما قدرت أشغّل العينة")}
 }
 try{const k=localStorage.getItem("nabra-key"); if(k){lKey.value=k;$("#lRemember").checked=true}}catch(e){}
-function keyState(){const ok=lKey.value.trim().length>10;$("#keyState").textContent=ok?"المفتاح جاهز":"بدون مفتاح";$("#keyState").className="pill"+(ok?" kind":"")}
+function keyState(){const ok=lKey.value.trim().length>10;$("#keyState").textContent=ok?"أصوات ElevenLabs":"صوت المتصفح المجاني";$("#keyState").className="pill"+(ok?" kind":"")}
 lKey.addEventListener("input",()=>{keyState();saveKey()});
 $("#lRemember").addEventListener("change",saveKey);
 function saveKey(){try{ if($("#lRemember").checked) localStorage.setItem("nabra-key",lKey.value.trim()); else localStorage.removeItem("nabra-key") }catch(e){}}
@@ -837,7 +837,7 @@ $("#lShow").onclick=()=>{const p=lKey.type==="password";lKey.type=p?"text":"pass
 try{const lt=localStorage.getItem("nabra-ltext"); if(lt!==null) $("#lText").value=lt}catch(e){}
 $("#lText").addEventListener("input",()=>{try{localStorage.setItem("nabra-ltext",$("#lText").value)}catch(e){};$("#lCost").textContent="≈ "+ar($("#lText").value.trim().length)+" كردت"});
 $("#lText").dispatchEvent(new Event("input"));
-lVoice.addEventListener("change",()=>{ if(!IN_VIEWER && $("#lText").value.trim() && lKey.value.trim().length>10) $("#lGen").click(); });
+lVoice.addEventListener("change",()=>{ if(!IN_VIEWER && $("#lText").value.trim()) $("#lGen").click(); });
 $("#lPrev").onclick=()=>{const id=lVoice.value; if(PREV[id]) playPreview(id,$("#lPrev")); else toast("ما عندي عينة لهذا الصوت، ولّد جملة قصيرة")};
 
 function errText(st,body){
@@ -867,6 +867,34 @@ async function tts(text,id,model,withLang){
   if(withLang && r.status===400 && /language/i.test(JSON.stringify(j))) return tts(text,id,model,false);
   const err=new Error(errText(r.status,j)); err.status=r.status; throw err;
 }
+// ---- Free instant voice: the browser's own Arabic voices (no key needed) ----
+const hasKey=()=>lKey.value.trim().length>10;
+const kindOf=id=>(VOICES.find(v=>v[4]===id)||["youngm"])[0];
+const FEMALE=/zariyah|hoda|salma|amina|laila|layla|mariam|fatima|female|امرأة/i, MALE=/hamed|naayf|shakir|fahed|tarik|hamdan|male|رجل/i;
+let BVOICES=[];
+function loadBV(){try{BVOICES=(speechSynthesis.getVoices()||[]).filter(v=>/^ar/i.test(v.lang))}catch(e){BVOICES=[]}}
+try{loadBV(); speechSynthesis.onvoiceschanged=loadBV}catch(e){}
+function pickBV(kind){
+  if(!BVOICES.length) loadBV();
+  const fem=/girl|woman|oldf/.test(kind);
+  const sa=BVOICES.filter(v=>/SA/i.test(v.lang)), pool=sa.length?sa:BVOICES;
+  return pool.find(v=>(fem?FEMALE:MALE).test(v.name)) || pool.find(v=>/natural|online/i.test(v.name)) || pool[0] || null;
+}
+const KPROS={girl:[1.2,1.02],woman:[1.08,1],oldf:[0.9,0.86],youngm:[1,1.02],man:[0.92,0.98],oldm:[0.75,0.84]};
+function browserSay(lines){ // lines: [{text, kind}]
+  if(!("speechSynthesis" in window)){lStatus.textContent="متصفحك ما فيه أصوات مدمجة. جرّب Edge أو Chrome، أو حط مفتاح ElevenLabs.";return false}
+  speechSynthesis.cancel(); let any=false;
+  lines.forEach(({text,kind})=>{
+    const t=text.replace(/\[[^\]]*\]/g," ").replace(/…/g,"، ").replace(/\s+/g," ").trim(); if(!t) return;
+    const u=new SpeechSynthesisUtterance(t); const v=pickBV(kind); if(v){u.voice=v;u.lang=v.lang}else u.lang="ar-SA";
+    const [pi,ra]=KPROS[kind]||[1,1]; u.pitch=pi; u.rate=ra; speechSynthesis.speak(u); any=true;
+  });
+  if(!any){lStatus.textContent="اكتب نص أول.";return false}
+  const v=pickBV(lines[0]&&lines[0].kind);
+  lStatus.textContent="يتكلم الحين بصوت المتصفح المجاني"+(v?" ("+v.name.replace(/Microsoft|Online|\(Natural\)|- Arabic.*$/g,"").trim()+")":"")+". هذا للتجربة السريعة بس. عشان تسمعه بصوت ماجد أو رائد وبإحساس، حط مفتاح ElevenLabs.";
+  return true;
+}
+function browserText(t){return toDialect(applyMine(t),dsel.value)}
 const TAKE_CACHE={};
 async function speak(text,id,label){
   const prepared=prepText(text); const key=id+"|"+$("#lModel").value+"|"+prepared;
@@ -888,12 +916,14 @@ function guard(){
 }
 $("#lGen").onclick=async()=>{
   const text=$("#lText").value.trim(); if(!text){lStatus.textContent="اكتب نص أول.";return}
+  if(!IN_VIEWER && !hasKey()){browserSay([{text:browserText(text),kind:kindOf(lVoice.value)}]);return}
   if(!guard()) return; busy=true; lStatus.textContent="يولّد…";
   try{await speak(text,lVoice.value,vName(lVoice.value)); lStatus.textContent="هذا نصّك بصوت "+vName(lVoice.value).split(" - ")[0]+". غيّر الصوت من القائمة ويقوله الصوت الجديد على طول."}
   catch(e){lStatus.textContent=e.message||"تعذّر الاتصال بـ ElevenLabs."}
   finally{busy=false}
 };
 async function sayLines(sp){
+  if(!IN_VIEWER && !hasKey()){const ls=parse(ta.value).lines.filter(l=>l.speaker===sp);browserSay(ls.map(l=>({text:browserText(l.text),kind:kindOf(spkVoice[sp])})));return}
   if(!guard()) return;
   const id=spkVoice[sp]; if(!id){lStatus.textContent="اختر صوت لـ"+sp+" أول.";return}
   const lines=parse(ta.value).lines.filter(l=>l.speaker===sp).map(l=>l.text); if(!lines.length){lStatus.textContent="ما لقيت جمل لـ"+sp+" في السكربت.";return}
@@ -903,6 +933,7 @@ async function sayLines(sp){
   finally{busy=false}
 }
 $("#lAll").onclick=async()=>{
+  if(!IN_VIEWER && !hasKey()){const ls=parse(ta.value).lines; if(!ls.length){lStatus.textContent="السكربت فاضي.";return} browserSay(ls.map(l=>({text:browserText(l.text),kind:kindOf(spkVoice[l.speaker])})));return}
   if(!guard()) return;
   const p=parse(ta.value); if(!p.lines.length){lStatus.textContent="السكربت فاضي.";return}
   const missing=p.speakers.filter(s=>p.lines.some(l=>l.speaker===s)&&!spkVoice[s]);
