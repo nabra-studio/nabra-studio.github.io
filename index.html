@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>استوديو النبرة</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a studio desk — script on the right (RTL start), live checks and the emotion map on the left; one AI bar on top */
+:root{
+  --bg:#F5F7F5; --surface:#FFFFFF; --ink:#18211F; --muted:#5E6B67; --line:#DFE5E2;
+  --accent:#0E7A66; --accent-ink:#FFFFFF; --tint:#E3F2EE;
+  --warn:#B4610B; --warn-bg:#FDF1E3; --bad:#B42318; --bad-bg:#FCEBEA; --ok:#1F7A45;
+  --s1:#0E7A66; --s2:#C2410C; --s3:#4F46E5; --s4:#A21CAF;
+  --f-display:"Readex Pro","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --surface:#1A2220; --ink:#E8EEEC; --muted:#9AA8A3; --line:#2B3532;
+  --accent:#3CC2A6; --accent-ink:#0B1412; --tint:#1C3330;
+  --warn:#F0A44B; --warn-bg:#33261A; --bad:#F2766B; --bad-bg:#3A1F1D; --ok:#5BC98A;
+  --s1:#3CC2A6; --s2:#F59E6B; --s3:#9A95FF; --s4:#E07BEA; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121816; --surface:#1A2220; --ink:#E8EEEC; --muted:#9AA8A3; --line:#2B3532;
+  --accent:#3CC2A6; --accent-ink:#0B1412; --tint:#1C3330;
+  --warn:#F0A44B; --warn-bg:#33261A; --bad:#F2766B; --bad-bg:#3A1F1D; --ok:#5BC98A;
+  --s1:#3CC2A6; --s2:#F59E6B; --s3:#9A95FF; --s4:#E07BEA; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.75}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px;display:grid;gap:22px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Masthead */
+.mast{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.mast h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:0;line-height:1.15}
+.mast h1 span{color:var(--accent)}
+.mast p{margin:6px 0 0;color:var(--muted);max-width:56ch}
+.wave{display:flex;align-items:center;gap:3px;height:44px}
+.wave i{display:block;width:4px;border-radius:3px;background:var(--accent);opacity:.85;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{transform:scaleY(.45)}}
+@media (prefers-reduced-motion:reduce){.wave i{animation:none}}
+
+/* Panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:14px;min-width:0}
+.panel h2{font-size:18px;font-weight:600}
+.hint{color:var(--muted);font-size:13.5px;margin:0}
+
+/* AI bar */
+.ai{display:grid;gap:12px}
+.ai-row{display:grid;grid-template-columns:2.2fr repeat(4,minmax(0,1fr)) auto;gap:10px;align-items:end}
+.field{display:grid;gap:4px;min-width:0}
+.field label{font-size:12.5px;color:var(--muted);font-weight:500}
+input[type=text],select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+select{appearance:auto}
+.btn{border:0;border-radius:10px;padding:11px 18px;font-weight:600;cursor:pointer;white-space:nowrap;transition:transform .15s,opacity .15s}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.small{padding:6px 12px;font-size:13px;border-radius:8px}
+.ai-status{font-size:13px;color:var(--muted);min-height:1.5em}
+
+/* Main grid */
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px;align-items:start}
+.editor-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+#script{min-height:360px;resize:vertical;line-height:2;font-size:16px;background:var(--bg)}
+.palette{display:grid;gap:10px}
+.pgroup{display:grid;gap:6px}
+.pgroup h3{font-size:12.5px;color:var(--muted);font-weight:500;font-family:var(--f-body)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{direction:ltr;font-family:var(--f-mono);font-size:12.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.chip:hover{border-color:var(--accent)}
+.chip.tested{background:var(--tint);border-color:transparent}
+.chip small{font-family:var(--f-body);direction:rtl;color:var(--muted);font-size:11.5px}
+
+/* Meter */
+.meter{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.meter div{background:var(--bg);border-radius:10px;padding:10px 12px}
+.meter b{display:block;font-family:var(--f-display);font-size:22px;font-variant-numeric:tabular-nums}
+.meter span{font-size:12px;color:var(--muted)}
+
+/* Checks */
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.checks li{padding:9px 12px;border-radius:10px;font-size:13.5px;display:grid;gap:2px;border-inline-start:3px solid transparent}
+.checks li.bad{background:var(--bad-bg);border-color:var(--bad)}
+.checks li.warn{background:var(--warn-bg);border-color:var(--warn)}
+.checks li.good{background:var(--tint);border-color:var(--ok)}
+.checks li b{font-weight:600}
+.checks li code{font-family:var(--f-mono);direction:ltr;unicode-bidi:isolate}
+
+/* Emotion map */
+.map{overflow-x:auto}
+.map svg{display:block;min-width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:5px;vertical-align:middle}
+
+/* Speakers export */
+.spk{display:grid;gap:10px}
+.spk-card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px}
+.spk-card header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.spk-card h3{font-size:14px;font-family:var(--f-body);font-weight:600;display:flex;align-items:center;gap:6px}
+.spk-card h3 i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.spk-card pre{margin:0;white-space:pre-wrap;font-family:var(--f-body);font-size:13.5px;color:var(--muted);max-height:9em;overflow:auto}
+
+/* Voices & steps */
+.voices{display:grid;gap:8px}
+.voice{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.voice:last-child{border-bottom:0}
+.voice .name{direction:ltr;font-family:var(--f-mono);font-size:13px;unicode-bidi:isolate}
+.voice .note{font-size:12.5px;color:var(--muted)}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.vcard{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:8px;align-content:start;background:var(--surface)}
+.vcard .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.vcard .vn{direction:ltr;unicode-bidi:isolate;font-family:var(--f-mono);font-size:13px;font-weight:500;text-align:start}
+.vcard .meta{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:11.5px;padding:2px 9px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.pill.kind{background:var(--tint);color:var(--accent);font-weight:600}
+.vcard p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.7}
+.vcard .acts{display:flex;gap:6px;flex-wrap:wrap}
+.chip[aria-selected="true"],.chip.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.chip.on small{color:inherit}
+.design{display:grid;gap:10px}
+.listen{border-color:var(--accent)}
+.lgrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px}
+.lcol{display:grid;gap:12px;align-content:start;min-width:0}
+.lrow{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:10px}
+.acts-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.keybox{background:var(--bg);border-radius:12px;padding:14px}
+.keybox input{background:var(--surface)}
+.keyrow{display:flex;gap:6px}
+.chk{display:flex;gap:8px;align-items:center;font-size:13.5px}
+.takes{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.takes li{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px}
+.takes .th{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px}
+.takes .th b{direction:ltr;unicode-bidi:isolate;font-family:var(--f-mono);font-weight:500}
+.takes audio{width:100%;height:36px}
+.takes a{color:var(--accent);font-size:13px}
+@media (max-width:760px){.lgrid,.lrow{grid-template-columns:minmax(0,1fr)}}
+#dDesc{font-family:var(--f-mono);font-size:13px;line-height:1.6}
+.spk-card select{font-size:13px;padding:6px 8px}
+details{border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-weight:600;font-family:var(--f-display)}
+ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-size:14px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.rule{background:var(--bg);border-radius:10px;padding:12px;font-size:13.5px}
+.rule b{display:block;font-family:var(--f-display);font-size:14px;margin-bottom:2px}
+.foot{color:var(--muted);font-size:12.5px;text-align:center}
+.foot a{color:var(--accent)}
+.toast{position:fixed;inset-inline:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));margin:auto;width:max-content;max-width:90vw;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13.5px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
+.toast.show{opacity:1;transform:none}
+
+@media (max-width:960px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .ai-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ai-row .topic{grid-column:1/-1}
+  .ai-row .btn{grid-column:1/-1}
+}
+@media (max-width:420px){.meter b{font-size:19px}}
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <header class="mast">
+    <div>
+      <h1>استوديو <span>النبرة</span></h1>
+      <p>اكتب سكربت صوتي بلهجتك وإحساسك، يفحصه لك على قواعد ElevenLabs v4، وانسخه جاهز للتوليد. بدون مايك وبدون تسجيل.</p>
+    </div>
+    <div class="wave" aria-hidden="true" id="wave"></div>
+  </header>
+
+  <section class="panel ai" aria-labelledby="ai-h">
+    <h2 id="ai-h">خلّ Claude يكتب لك السكربت</h2>
+    <form class="ai-row" id="aiForm">
+      <div class="field topic"><label for="topic">الموضوع أو الموقف</label>
+        <input type="text" id="topic" placeholder="مثال: عجوز تنصح حفيدتها قبل زواجها، أو شايب يعلّم ولده يسوق" value="صديقين يتكلمون عن أول يوم دوام"></div>
+      <div class="field"><label for="dialect">اللهجة</label><select id="dialect"></select></div>
+      <div class="field"><label for="speakers">عدد الأشخاص</label>
+        <select id="speakers"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
+      <div class="field"><label for="secs">المدة التقريبية</label>
+        <select id="secs"><option value="20">٢٠ ثانية</option><option value="40" selected>٤٠ ثانية</option><option value="60">دقيقة</option><option value="120">دقيقتين</option></select></div>
+      <div class="field"><label for="mood">الطابع</label>
+        <select id="mood"><option>كوميدي</option><option>شرح وتعليق</option><option>درامي</option><option>إعلان</option><option>قصة</option></select></div>
+      <button class="btn primary" id="aiBtn" type="submit">اكتب السكربت</button>
+    </form>
+    <div class="ai-status" id="aiStatus" aria-live="polite"></div>
+  </section>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="ed-h">
+      <div class="editor-head">
+        <h2 id="ed-h">السكربت</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ghost small" id="fixBtn" type="button">صحّح الملاحظات</button>
+          <button class="btn ghost small" id="speakerBtn" type="button">+ شخص</button>
+          <button class="btn primary small" id="copyAll" type="button">انسخ السكربت</button>
+        </div>
+      </div>
+      <p class="hint">اسم الشخص في سطر لحاله ينتهي بنقطتين، وقبل كل جملة إحساسها بين أقواس مربعة. اضغط على أي إحساس تحت يندرج مكان المؤشر.</p>
+      <textarea id="script" spellcheck="false" aria-label="نص السكربت"></textarea>
+      <div class="palette" id="palette"></div>
+    </section>
+
+    <div style="display:grid;gap:22px;min-width:0">
+      <section class="panel" aria-labelledby="chk-h">
+        <h2 id="chk-h">الفحص</h2>
+        <div class="meter">
+          <div><b id="mChars">0</b><span>تقريبًا كردت</span></div>
+          <div><b id="mDur">0</b><span>مدة الصوت</span></div>
+          <div><b id="mFree">0%</b><span>من باقة الشهر المجانية</span></div>
+        </div>
+        <ul class="checks" id="checks"></ul>
+      </section>
+
+      <section class="panel" aria-labelledby="map-h">
+        <h2 id="map-h">خريطة الإحساس</h2>
+        <p class="hint">كل عمود جملة: طوله حسب قوة الإحساس، وعرضه حسب طول الكلام. إذا الخط مسطّح، الصوت بيطلع ممل.</p>
+        <div class="map" id="map"></div>
+        <div class="legend" id="legend"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="sp-h">
+        <h2 id="sp-h">جاهز للصق</h2>
+        <p class="hint">في ElevenLabs: كل شخص بـ Add speaker، والصق جمله في خانته.</p>
+        <div class="spk" id="spk"></div>
+      </section>
+
+    </div>
+  </div>
+
+  <section class="panel listen" aria-labelledby="l-h" id="listen">
+    <div class="editor-head">
+      <h2 id="l-h">اسمع الصوت</h2>
+      <span class="pill" id="keyState">بدون مفتاح</span>
+    </div>
+    <p class="hint" id="lNote">اكتب نصك واختر الصوت واضغط «ولّد». التوليد من حسابك أنت في ElevenLabs بمفتاح API، والمفتاح يبقى في جهازك وما يروح إلا لـ ElevenLabs.</p>
+    <div id="lBody" class="lgrid">
+      <div class="lcol">
+        <div class="field"><label for="lText">النص</label><textarea id="lText" rows="4">[shocked] من جدك؟ [pause] لا تقول إنك نسيت… [frustrated sigh] تكفى، ترى موب وقتك أبد!</textarea></div>
+        <div class="lrow">
+          <div class="field"><label for="lVoice">الصوت</label><select id="lVoice"></select></div>
+          <div class="field"><label for="lModel">النموذج</label><select id="lModel"><option value="eleven_v4">v4 (الأحاسيس)</option><option value="eleven_v3">v3</option><option value="eleven_multilingual_v2">Multilingual v2</option></select></div>
+        </div>
+        <div class="acts-row">
+          <button class="btn primary" type="button" id="lGen">ولّد الجملة</button>
+          <button class="btn ghost" type="button" id="lPrev">اسمع عينة الصوت</button>
+          <button class="btn ghost" type="button" id="lAll">ولّد الحوار كامل</button>
+          <span class="hint" id="lCost"></span>
+        </div>
+        <div class="ai-status" id="lStatus" aria-live="polite"></div>
+        <ol class="takes" id="takes"></ol>
+      </div>
+      <div class="lcol keybox">
+        <div class="field"><label for="lKey">مفتاح ElevenLabs API</label>
+          <div class="keyrow"><input type="password" id="lKey" dir="ltr" autocomplete="off" placeholder="sk_…"><button class="btn ghost small" type="button" id="lShow">إظهار</button></div></div>
+        <label class="chk"><input type="checkbox" id="lRemember"> تذكّره في هذا الجهاز</label>
+        <details open>
+          <summary>كيف أطلع المفتاح؟</summary>
+          <ol class="steps">
+            <li>ادخل elevenlabs.io ← من القائمة Developers ← API Keys.</li>
+            <li>اضغط Create Key، وخلّ الصلاحيات Text to Speech بس، وحط حد للكردت لو تبي.</li>
+            <li>انسخ المفتاح والصقه هنا. لا ترسله لأحد.</li>
+            <li>أي صوت من المكتبة: افتحه في الموقع واضغط Add to my voices قبل تولّد فيه.</li>
+          </ol>
+        </details>
+        <p class="hint">ولّد جملة جملة ولا تضغط بسرعة ورا بعض. الطلبات الكثيرة بنفس اللحظة تخلي ElevenLabs توقف الحساب المجاني.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="v-h">
+    <div class="editor-head">
+      <h2 id="v-h">الأصوات والشخصيات</h2>
+      <div class="chips" id="vfilter" role="tablist" aria-label="نوع الصوت"></div>
+    </div>
+    <p class="hint">أصوات عربية من مكتبة ElevenLabs. انسخ الاسم وابحث عنه في More voices، اسمعه، ثم أضفه لأصواتك. الصوت والكلام لازم يكونون من نفس اللهجة.</p>
+    <div class="vgrid" id="vgrid"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="d-h">
+    <h2 id="d-h">صمّم صوت ما هو موجود</h2>
+    <p class="hint">ما لقيت الشايب أو العجوز اللي في بالك؟ في ElevenLabs افتح Voices ← Create voice ← Voice Design، والصق الوصف والجملة. يطلع لك ثلاث نسخ، اختر الأحلى واحفظه. الوصف بالإنجليزي لأنه يفهمه أدق.</p>
+    <div class="chips" id="dpick"></div>
+    <div class="design">
+      <div class="field"><label for="dDesc">وصف الصوت</label><textarea id="dDesc" rows="3" dir="ltr"></textarea></div>
+      <div class="field"><label for="dLine">جملة التجربة (لازم فوق ١٠٠ حرف)</label><textarea id="dLine" rows="3"></textarea></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn primary small" type="button" id="dCopyDesc">انسخ الوصف</button>
+        <button class="btn ghost small" type="button" id="dCopyLine">انسخ الجملة</button>
+        <span class="hint" id="dCount"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="r-h">
+    <h2 id="r-h">قواعد تفرق في النطق</h2>
+    <div class="rules">
+      <div class="rule"><b>الأرقام كلام</b>اكتب «عشرة آلاف» مو 10,000، عشان ما يقراها غلط.</div>
+      <div class="rule"><b>الإنجليزي بحروف عربية</b>«تكست تو سبيتش» بدل الكلمة الإنجليزية، عشان ينطقها بلهجتك.</div>
+      <div class="rule"><b>شكّل الصعبة بس</b>الكلمة اللي تنقرى بأكثر من طريقة، مو الكلام كله.</div>
+      <div class="rule"><b>الوقفات بالنقاط</b>«…» تخليه يتردد ويوقف بشكل طبيعي.</div>
+      <div class="rule"><b>جرّب جملة قصيرة أول</b>تأكد من الصوت والإحساس، وبعدها ولّد الباقي جملة جملة.</div>
+      <div class="rule"><b>لغة الإعدادات عربي</b>لا تخليها Auto، ممكن يحسب كلامك لغة ثانية.</div>
+    </div>
+    <details>
+      <summary>الخطوات في ElevenLabs</summary>
+      <ol class="steps">
+        <li>ادخل elevenlabs.io وسوّ حساب. المجاني يعطيك عشرة آلاف كردت كل شهر، يعني قرابة عشر دقايق كلام.</li>
+        <li>اضغط Text to Speech من القائمة الجانبية.</li>
+        <li>اضغط اسم الصوت ← More voices، وفلتر: Language عربي، Accent لهجتك، Category حسب نوع المحتوى.</li>
+        <li>الصق السكربت من هنا. لو أكثر من شخص، اضغط Add speaker لكل واحد.</li>
+        <li>من الإعدادات ⚙ خلّ Language على Arabic.</li>
+        <li>اضغط Generate. كل مرة يعطيك نسختين، اسمعهم ونزّل الأحلى.</li>
+        <li>لو طلعت كلمة غلط، أعد توليد الجملة لحالها بس.</li>
+      </ol>
+    </details>
+  </section>
+
+  <p class="foot">مبني على «دليل توليد الأصوات» من بسام (<span dir="ltr">@with.bassam</span>) · يشتغل مع <a href="https://elevenlabs.io" target="_blank" rel="noopener">ElevenLabs</a> نموذج v4</p>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const DIALECTS=[["سعودي","Saudi"],["خليجي","Gulf"],["كويتي","Kuwaiti"],["بحريني","Bahraini"],["قطري","Qatari"],["عماني","Omani"],["عراقي","Iraqi"],["أردني","Jordanian"],["فلسطيني","Palestinian"],["شامي","Levantine"],["سوري","Syrian"],["مصري","Egyptian"],["سوداني","Sudanese"],["ليبي","Libyan"],["تونسي","Tunisian"],["جزائري","Algerian"],["مغربي","Moroccan"],["فصحى","Modern Standard"]];
+const KINDS=[["all","الكل"],["girl","بنات"],["woman","نساء"],["oldf","عجايز"],["youngm","شباب"],["man","رجال"],["oldm","شياب"]];
+// [kind, name, dialect, note, voice_id]
+const VOICES=[
+ ["girl","Nouf - Saudi Commercial & Documentary","سعودي","شابة طبيعية، للإعلانات والسرد الوثائقي","VjxKp6w1MCufETfW5zFM"],
+ ["girl","Wiam – Confident","فصحى","دافية وواثقة، للقصص والمحتوى التعليمي","R5kMoWNNTn84ezIJA53m"],
+ ["girl","Reem","عماني","هادية وواضحة، تركب على المقاطع القصيرة","dYnGGqiuxHfLuVGVGIbi"],
+ ["girl","Mimi - Lebanese (Beirut)","لبناني","ناعمة وخفيفة","NQyF5U0t336unYhQXcuv"],
+ ["girl","Fatima – Loud & Engaging Influencer","مصري","حماس مؤثرات ومراجعات منتجات","Vu9gRjkR23ZG8EWrSmnj"],
+ ["woman","Mona- Saudi Arabic Voice","سعودي","بيضاء دافية وواثقة، للتعليق والبودكاست","o0oG1TnHDWDdKbAeBgCO"],
+ ["woman","Layan - The Professional","سعودي نجدي","ثابتة ورزينة، للمحتوى الرسمي والحوار","gVzwmdZzRgBrNjXaTmi5"],
+ ["woman","Amal - Rich & Sophisticated","سعودي حجازي","فخمة وقريبة في نفس الوقت","QtQamNJjpordEbNFIlz3"],
+ ["woman","Hana - Casual & Relatable","سعودي حجازي","عفوية، للسوشال والفلوقات","kdUY91gH5xyDHapxlthT"],
+ ["woman","Lama – Soft Emotional","خليجي","ناعمة وعاطفية، للقصص والمقاطع السينمائية","ulJ49j1YlxrYnPoj5o12"],
+ ["woman","Amira - Poised and Graceful","خليجي","رزينة، للإعلانات القصيرة","cdxrkuYK4nZwDSkjw5sa"],
+ ["oldf","Noorah-Saudi Warm & Clear","سعودي شرقاوي","صوت كبيرة حنون ودافي، للحكايات والشعر","ckaeRWMtCV0u0pUT3wX1"],
+ ["oldf","Latifa - Bright and Welcoming","خليجي","امرأة كبيرة حكيمة، فيها هيبة","LEqoCOGNjyExRiRUZhkv"],
+ ["oldf","Samira - Rich and Commanding","خليجي","بحّة خفيفة وخبرة سنين","ZBf5V86GjdTx6Sdsex5C"],
+ ["oldf","Hanan - Polished and Commanding","خليجي","ناضجة وفخمة، للوثائقي","3GgICclK01zog9nyLmX1"],
+ ["oldf","Sawsan - Dignified and Warm","مصري","ناضجة هادية وبطيئة","mS4cERRqrNy5Kmlx8Udf"],
+ ["youngm","Majed - Measured & Steady","سعودي نجدي","هادي وثابت، ممتاز للشرح والسرد","oJCdZCYaJobw2GlrIQm5"],
+ ["youngm","Bandar","سعودي (لمسة جنوبية)","ودود وخفيف دم، للحوار والقصص","aLv8a8fbjjLsORNUDQ1J"],
+ ["youngm","Ahmed - intellectual, Calm & Educational","سعودي","هادي ومرتب، للمحاضرات والشرح","etJo0VNXVmjmd5XDR7lJ"],
+ ["youngm","Mohammed - Smooth Saudi Arabic","سعودي","ناعم، يركب على المحادثات",""],
+ ["youngm","Ali Ahmed - Authentic Saudi Dialect","سعودي","لهجة أصيلة للحوارات",""],
+ ["youngm","Saad","سعودي","واضح للشرح والتعليق",""],
+ ["youngm","faisal al anqoudi","عماني","سينمائي وواثق","lXwVtAOOlP0Qf7aXOebM"],
+ ["youngm","Rafoush – Young Relatable Customer Care","شامي","شاب عفوي وقريب","oOucsh1OZElozgDVjcfe"],
+ ["youngm","Bilal A","أردني","عميق وأنيق","jN2L0WufWIAXnexEWTfh"],
+ ["man","Mohammed Salman - Saudi Storytelling","سعودي","عميق وهادي، للوثائقي والكتب الصوتية","qby5WU0hOX8igIszsSvl"],
+ ["man","Mohammad – Warm Arabic Commercial","شامي/فصحى","دافي للإعلانات","vszNunPGBVqJg1Qd4H7Z"],
+ ["man","مؤمل العباس","عراقي","دافي، للإعلانات والقصص","27t8HdkwF7812XrcB2Ua"],
+ ["man","Majdi - life style voice","أردني","طبيعي لمحتوى الحياة اليومية","kU20U5bOr9ND3yqlsdwV"],
+ ["man","Mahmoud Soliman - Egyptian Story","مصري","قصص وغموض وتشويق","oOge1k8044i7H9hCreX6"],
+ ["oldm","RAED","سعودي خليجي","شايب ببحّة خفيفة، للسرد والقصص","IK7YYZcSpmlkjKrQxbSn"],
+ ["oldm","Moncellence pro","مصري","كبير هادي ومطمئن، للتأمل والكتب","Jez3JdhBInQTvlAvDOWR"]
+];
+const DESIGNS=[
+ ["شايب نجدي","An elderly Saudi man in his seventies from Najd. Deep, slightly raspy voice, slow and deliberate pace, warm grandfatherly wisdom, authentic Najdi Arabic accent.","يا وليدي، الدنيا ما تعطي أحد كل شي. أنا يوم كنت بعمرك كنا نمشي للسوق على رجولنا، ونرجع وحنا مبسوطين بالقليل. اسمع مني وخذ العلم من أبوك."],
+ ["عجوز نجدية","An elderly Saudi woman in her seventies. Soft but firm voice with a gentle rasp, affectionate grandmotherly tone, slow pace, authentic Najdi Arabic accent.","تعال يا بعد قلبي، اجلس جنبي. سويت لك القهوة والتمر مثل ما تحب. وش فيك ساكت؟ قل لي وش اللي مضايقك، ترى جدتك تفهمك من نظرة."],
+ ["بنت جامعية","A Saudi woman in her early twenties. Bright, lively and expressive voice, quick natural pace, casual Riyadh Saudi accent, friendly and funny.","يا بنات لازم أعلمكم وش صار اليوم! رحت الجامعة متأخرة ودخلت القاعة بهدوء، وفجأة الدكتورة نادت اسمي قدام الكل. بغيت أختفي من الإحراج والله."],
+ ["أم سعودية","A Saudi mother in her forties. Warm, caring voice with a hint of firmness, clear medium pace, Saudi Najdi accent.","يا عيالي الساعة صارت تسع، يلا كل واحد على فراشه. بكرة دوام ومدارس، وأبيكم تصحون بدري بدون ما أنادي عشر مرات. وأحلام سعيدة يا حبايبي."],
+ ["شاب حماسي","A Saudi young man in his twenties. Energetic, upbeat and playful voice, confident, fast pace, casual Saudi accent, made for social media.","يا جماعة الخير اسمعوا! لقيت لكم مكان في الرياض ما أحد يعرف عنه، القهوة فيه شي ثاني والجلسة تفتح النفس. لا تقولون ما قلت لكم، جربوه وردوا لي خبر."],
+ ["بدوي","A Bedouin man in his fifties from the Saudi desert. Deep, resonant voice, proud and poetic delivery, slow pace, authentic Bedouin Arabic accent.","الليل في البر غير، والنجوم تقرب منك كأنها تبي تسولف. نشب النار ونصب القهوة، ونتذكر أيام أول يوم الرجال كلمتهم وعد ما يرجعون فيه."],
+ ["راوي فخم","A mature Saudi male narrator. Deep cinematic voice, calm and authoritative, measured documentary pace, Saudi accent.","قبل ألف سنة، كانت هذي الأرض طريق القوافل بين الشرق والغرب. هنا مرّ التجار والشعراء والرحالة، وتركوا وراهم حكايات ما زالت الرمال تحفظها إلى اليوم."]
+];
+const VOICE_NAMES=VOICES.map(v=>v[1]);
+const GS="https://storage.googleapis.com/eleven-public-prod/database/workspace/";
+const PREV={
+ VjxKp6w1MCufETfW5zFM:GS+"75e37208cdc1469d890173cc38b34fbc/voices/VjxKp6w1MCufETfW5zFM/bad8b32a-ace1-427d-b7d3-34a7754ebb51.mp3",
+ R5kMoWNNTn84ezIJA53m:GS+"0863f76ed3fb42a7a576877dba4bddf1/voices/R5kMoWNNTn84ezIJA53m/815403ae-8e6b-430a-bc88-def48e534ade.mp3",
+ dYnGGqiuxHfLuVGVGIbi:GS+"4a3de51fea5440b6a2b8fc675ee69b91/voices/dYnGGqiuxHfLuVGVGIbi/dbbb37c6-fe15-4ebd-b21c-aec40730dcf5.mp3",
+ o0oG1TnHDWDdKbAeBgCO:GS+"a9b951cc33e945ad9c94b1cd45454096/voices/o0oG1TnHDWDdKbAeBgCO/lqS4F9GMvaxS4wpT5zRC.mp3",
+ gVzwmdZzRgBrNjXaTmi5:GS+"1da06ea679a54975ad96a2221fe6530d/voices/gVzwmdZzRgBrNjXaTmi5/f17f1511-6e5a-4e4b-be07-4f65e0f6a782.mp3",
+ QtQamNJjpordEbNFIlz3:GS+"1da06ea679a54975ad96a2221fe6530d/voices/QtQamNJjpordEbNFIlz3/af9a0781-2de8-4b17-b67c-6089ac443533.mp3",
+ ulJ49j1YlxrYnPoj5o12:GS+"4779d642527146e49c2cbb75f08dfb34/voices/ulJ49j1YlxrYnPoj5o12/oSwaEvKtBimWxCLuMHKE.mp3",
+ ckaeRWMtCV0u0pUT3wX1:GS+"f5102162ca8b4443ba97059db4cad81a/voices/ckaeRWMtCV0u0pUT3wX1/y5cjoLkv19wwALaQNu5T.mp3",
+ LEqoCOGNjyExRiRUZhkv:GS+"1da06ea679a54975ad96a2221fe6530d/voices/LEqoCOGNjyExRiRUZhkv/02778b57-9520-4a92-9b51-3b180faf3d32.mp3",
+ ZBf5V86GjdTx6Sdsex5C:GS+"1da06ea679a54975ad96a2221fe6530d/voices/ZBf5V86GjdTx6Sdsex5C/97K6hruBJV59RxAy1xBA.mp3",
+ "3GgICclK01zog9nyLmX1":GS+"1da06ea679a54975ad96a2221fe6530d/voices/3GgICclK01zog9nyLmX1/WixflmCxU5UWYJSyrN7q.mp3",
+ mS4cERRqrNy5Kmlx8Udf:GS+"1da06ea679a54975ad96a2221fe6530d/voices/mS4cERRqrNy5Kmlx8Udf/MbcvYjlwXhnJn6mw32qv.mp3",
+ oJCdZCYaJobw2GlrIQm5:GS+"1da06ea679a54975ad96a2221fe6530d/voices/oJCdZCYaJobw2GlrIQm5/c2cfba96-f625-4789-81ff-a05f685453f6.mp3",
+ etJo0VNXVmjmd5XDR7lJ:GS+"7d668731b856414bbb372d5c271815c4/voices/etJo0VNXVmjmd5XDR7lJ/vPGDdGUXUBgOKv7ewWqb.mp3",
+ lXwVtAOOlP0Qf7aXOebM:GS+"1a3b0becfefd4b3ea6ebd12931f79744/voices/lXwVtAOOlP0Qf7aXOebM/rNDpvIEM9bWWq134RCfQ.mp3",
+ oOucsh1OZElozgDVjcfe:GS+"ed9b05e6324c457685490352e9a1ec90/voices/oOucsh1OZElozgDVjcfe/8RFdohLXEw5dpW9F8B6T.mp3",
+ jN2L0WufWIAXnexEWTfh:GS+"b3995c9329b94e0c9c8350c308b4fd8f/voices/jN2L0WufWIAXnexEWTfh/o7Xy2MePzzdDopdHIlT2.mp3",
+ qby5WU0hOX8igIszsSvl:GS+"b704d745f0e542b0b43eba045ff37919/voices/qby5WU0hOX8igIszsSvl/x94umH6QdsNvtx1U9VvG.mp3",
+ vszNunPGBVqJg1Qd4H7Z:GS+"6c9f8d9ce1e443569bb0c5536b29bdbd/voices/vszNunPGBVqJg1Qd4H7Z/xTtj5e6JMEUsSqsZOuiw.mp3",
+ "27t8HdkwF7812XrcB2Ua":GS+"a58e71bbcbb94200873108f251de02f5/voices/27t8HdkwF7812XrcB2Ua/xbqDxGWSffTuwN47iMc3.mp3",
+ kU20U5bOr9ND3yqlsdwV:GS+"0f56d8417f704908b9279330f8abe188/voices/kU20U5bOr9ND3yqlsdwV/eKlV7o73pSYMrp8fvtld.mp3",
+ IK7YYZcSpmlkjKrQxbSn:"https://storage.googleapis.com/eleven-public-prod/2IWzWT3G3sgilYJywwA1YhbUxU73/voices/IK7YYZcSpmlkjKrQxbSn/23430e54-d41e-4b40-b321-9e5a9f3018b4.mp3",
+ Jez3JdhBInQTvlAvDOWR:"https://storage.googleapis.com/eleven-public-prod/database/user/EryykDAqKOYeUKhmmdSqwmVHnSG2/voices/Jez3JdhBInQTvlAvDOWR/IBYYI30FXYplxKck4yIz.mp3"
+};
+// Inside a Claude viewer the page can't reach ElevenLabs; the downloaded file can.
+const IN_VIEWER=!!window.claude;
+const spkVoice={}; try{Object.assign(spkVoice,JSON.parse(localStorage.getItem("nabra-spkvoice")||"{}"))}catch(e){}
+const TAGS=[
+ {g:"مجرّبة وتشتغل",tested:true,t:[["whispers","يهمس"],["laughs","يضحك"],["laughs quietly","يضحك بخفوت"],["nervous, sighs","متوتر ويتنهد"],["shocked","مصدوم"],["curious","يستغرب"],["excited","متحمس"],["shouting","يصارخ"],["out of breath","لاهث"],["screaming with joy","يصرخ من الفرحة"],["pause","يوقف شوي"]]},
+ {g:"للشرح والتعليق",tested:true,t:[["clear","واضح"],["calm","هادي"],["warm","بدفا"],["friendly","ودود"],["explaining","يشرح"],["slightly slower","أبطأ شوي"],["reassuring","يطمّن"],["playful","بخفة دم"],["impressed","منبهر"],["confident","بثقة"]]},
+ {g:"مشاعر (جرّبها بجملة قصيرة أول)",t:[["happy","مبسوط"],["sad","حزين"],["angry","معصّب"],["sarcastic","يتنطز"],["amazed","مندهش"],["delighted","فرحان"],["alarmed","مفزوع"],["panicking","مرتبك"],["desperately","يترجى"],["sheepishly","مستحي"],["dismissive","مو مهتم"],["deadpan","بوجه جامد"],["mischievously","بشقاوة"],["dramatically","بدراما"],["cautiously","بحذر"]]},
+ {g:"طريقة الكلام والضحك",t:[["muttering","يتمتم"],["sings","يغني"],["low, gravelly voice","صوت خشن واطي"],["quietly, with controlled fear","بهدوء وخوف"],["softening, reflective","يهدى ويسرح"],["laughs harder","يضحك أكثر"],["giggles","ضحكة صغيرة"],["chuckles","يضحك بخفة"],["stifling laughter","يكتم ضحكته"],["wheezing","ينقطع من الضحك"],["exhales","يزفر"],["frustrated sigh","يتأفف"],["happy gasp","شهقة فرح"],["gulps","يبلع ريقه"],["crying","يبكي"],["interrupting","يقاطع"],["jumping in","يدخل بالكلام"]]}
+];
+const KNOWN=new Set(); TAGS.forEach(g=>g.t.forEach(([k])=>k.split(",").forEach(x=>KNOWN.add(x.trim().toLowerCase()))));
+["warmly","shouts","starts laughing","laughing hysterically","sighs","nervous","quietly"].forEach(x=>KNOWN.add(x));
+const ENERGY={whispers:.18,quietly:.25,"laughs quietly":.38,sighs:.3,"nervous":.45,calm:.32,clear:.42,warm:.4,warmly:.4,friendly:.45,explaining:.42,"slightly slower":.3,reassuring:.36,curious:.55,playful:.6,impressed:.65,confident:.55,laughs:.7,"laughs harder":.82,giggles:.55,chuckles:.5,shocked:.82,excited:.86,shouting:.95,shouts:.95,"out of breath":.8,"screaming with joy":1,pause:.06,sad:.3,happy:.6,angry:.9,sarcastic:.5,amazed:.75,delighted:.7,alarmed:.85,panicking:.92,desperately:.7,sheepishly:.3,dismissive:.3,deadpan:.25,mischievously:.5,dramatically:.75,cautiously:.28,muttering:.2,sings:.6,crying:.55,exhales:.25,"frustrated sigh":.4,"happy gasp":.7,gulps:.35,wheezing:.85,"stifling laughter":.45,interrupting:.7,"jumping in":.65};
+const SAMPLE=`فهد:
+[whispers] اسمع… لا تقول لأحد…
+[laughs quietly] أمس رحت المقابلة وأنا لابس ثوب العيد بالغلط.
+سلطان:
+[shocked] لا! والمدير وش قال؟
+فهد:
+[nervous, sighs] يا رجّال… قعد يطالع الثوب ثلاث دقايق… وبعدين قال: «مبروك مقدّمًا».
+سلطان:
+[curious] يعني توظّفت؟
+فهد:
+[excited, shouting] توظّفت! [pause] بس ما أدري عشان السيرة الذاتية ولا عشان الثوب.
+سلطان:
+[laughs] الثوب أكيد.`;
+
+// wave deco
+const w=$("#wave"); [10,22,34,18,40,28,14,36,24,12,30,20].forEach((h,i)=>{const b=document.createElement("i");b.style.height=h+"px";b.style.animationDelay=(i*.11)+"s";w.appendChild(b)});
+
+// dialect select
+const dsel=$("#dialect"); DIALECTS.forEach(([a,e])=>{const o=document.createElement("option");o.value=a;o.textContent=a;dsel.appendChild(o)});
+
+const ta=$("#script");
+let saved=null; try{saved=localStorage.getItem("nabra-draft")}catch(e){}
+ta.value=saved||SAMPLE;
+try{const d=localStorage.getItem("nabra-dialect"); if(d) dsel.value=d}catch(e){}
+
+// palette
+const pal=$("#palette");
+TAGS.forEach(g=>{
+  const box=document.createElement("div");box.className="pgroup";
+  const h=document.createElement("h3");h.textContent=g.g;box.appendChild(h);
+  const c=document.createElement("div");c.className="chips";
+  g.t.forEach(([k,ar])=>{const b=document.createElement("button");b.type="button";b.className="chip"+(g.tested?" tested":"");
+    b.innerHTML="";const s=document.createElement("span");s.textContent="["+k+"]";const sm=document.createElement("small");sm.textContent=ar;b.append(s,sm);
+    b.onclick=()=>insert("["+k+"] ");c.appendChild(b)});
+  box.appendChild(c);pal.appendChild(box)});
+
+function insert(str){
+  const s=ta.selectionStart,e=ta.selectionEnd,v=ta.value;
+  ta.value=v.slice(0,s)+str+v.slice(e); ta.focus(); ta.selectionStart=ta.selectionEnd=s+str.length; update();
+}
+$("#speakerBtn").onclick=()=>{
+  const n=parse(ta.value).speakers.length; const names=["فهد","سلطان","نورة","ريم","خالد"];
+  const name=names.find(x=>!parse(ta.value).speakers.includes(x))||("شخص "+(n+1));
+  const pre=ta.value.endsWith("\n")||!ta.value?"":"\n"; ta.selectionStart=ta.selectionEnd=ta.value.length; insert(pre+name+":\n[clear] ");
+};
+
+// parse
+const SPK=/^\s*([^\[\]\n:]{1,24})[:：]\s*$/;
+function parse(text){
+  const lines=text.split("\n"); const out=[]; const speakers=[]; let cur=null;
+  lines.forEach((raw,i)=>{const l=raw.trim(); if(!l) return;
+    const m=l.match(SPK); if(m){cur=m[1].trim(); if(!speakers.includes(cur)) speakers.push(cur); return}
+    const tags=[...l.matchAll(/\[([^\]]+)\]/g)].map(x=>x[1].trim());
+    out.push({n:i+1,text:l,speaker:cur||"الراوي",tags,spoken:l.replace(/\[[^\]]*\]/g,"").trim()});
+    if(!cur && !speakers.includes("الراوي")) speakers.push("الراوي");
+  });
+  return {lines:out,speakers};
+}
+function energy(tags){
+  if(!tags.length) return .4;
+  let v=0; tags.forEach(t=>t.split(",").forEach(x=>{const k=x.trim().toLowerCase(); if(ENERGY[k]!=null) v=Math.max(v,ENERGY[k]); else v=Math.max(v,.5)})); return v||.4;
+}
+const ar=n=>n.toLocaleString("ar-SA");
+
+function lint(p,text){
+  const issues=[];
+  p.lines.forEach(L=>{
+    if(/[0-9٠-٩]/.test(L.spoken)) issues.push(["bad","سطر "+ar(L.n)+": فيه أرقام","اكتبها كلام، مثل «عشرة» بدل 10."]);
+    if(/[A-Za-z]/.test(L.spoken)) issues.push(["bad","سطر "+ar(L.n)+": فيه إنجليزي برا الأقواس","اكتب الكلمة بحروف عربية عشان ينطقها بلهجتك."]);
+    if(!L.tags.length && L.spoken) issues.push(["warn","سطر "+ar(L.n)+": بدون إحساس","حط إحساس قبل الجملة، مثل [warm] أو [curious]."]);
+    L.tags.forEach(t=>t.split(",").forEach(x=>{const k=x.trim().toLowerCase(); if(k && !KNOWN.has(k) && !/[؀-ۿ]/.test(k)) issues.push(["warn","إحساس غير مجرّب: ["+x.trim()+"]","ممكن يشتغل، بس جرّبه بجملة قصيرة قبل تعتمده."])}));
+    L.tags.forEach(t=>{if(/[؀-ۿ]/.test(t)) issues.push(["bad","سطر "+ar(L.n)+": إحساس بالعربي ["+t+"]","الإحساس يكتب بالإنجليزي بين الأقواس، مثل [whispers]."])});
+  });
+  const letters=(text.match(/[ء-ي]/g)||[]).length, har=(text.match(/[ً-ْ]/g)||[]).length;
+  if(letters>40 && har/letters>.18) issues.push(["warn","تشكيل كثير","شكّل الكلمات اللي تنقرى غلط بس، مو الكلام كله."]);
+  if(/\[[^\]]*$/m.test(text)||/^[^\[]*\]/m.test(text)) issues.push(["bad","قوس ناقص","فيه إحساس ما تسكّر قوسه."]);
+  const d=dsel.value; if(d!=="سعودي") issues.push(["warn","تأكد من الصوت","اختر صوت من فلتر Accent ("+(DIALECTS.find(x=>x[0]===d)||[,""])[1]+") عشان ما يطلع خليط."]);
+  if(p.lines.length>1){const es=p.lines.map(L=>energy(L.tags)); if(Math.max(...es)-Math.min(...es)<.2) issues.push(["warn","الإحساس ثابت","نوّع بين جمل هادية وجمل حماس، الصوت يصير أحيا."]);}
+  return issues;
+}
+
+function update(){
+  const text=ta.value; const p=parse(text);
+  try{localStorage.setItem("nabra-draft",text)}catch(e){}
+  const chars=p.lines.reduce((s,L)=>s+L.text.length,0);
+  $("#mChars").textContent=ar(chars);
+  const sec=Math.round(chars/16.5); $("#mDur").textContent=sec<60?ar(sec)+" ث":ar(Math.floor(sec/60))+":"+String(sec%60).padStart(2,"0").replace(/\d/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]);
+  $("#mFree").textContent=ar(Math.min(999,Math.round(chars/100)))+"٪";
+  // checks
+  const ul=$("#checks"); ul.innerHTML=""; const iss=lint(p,text);
+  if(!p.lines.length){const li=document.createElement("li");li.className="warn";li.textContent="اكتب أول جملة عشان أفحصها.";ul.appendChild(li)}
+  else if(!iss.length){const li=document.createElement("li");li.className="good";li.innerHTML="<b>جاهز</b><span>ما فيه ملاحظات. جرّب أول جملة لحالها قبل تولّد الكل.</span>";ul.appendChild(li)}
+  iss.slice(0,8).forEach(([k,a,b])=>{const li=document.createElement("li");li.className=k;const x=document.createElement("b");x.textContent=a;const y=document.createElement("span");y.textContent=b;li.append(x,y);ul.appendChild(li)});
+  if(iss.length>8){const li=document.createElement("li");li.className="warn";li.textContent="و"+ar(iss.length-8)+" ملاحظات ثانية. اضغط «صحّح الملاحظات».";ul.appendChild(li)}
+  drawMap(p); drawSpk(p);
+}
+
+const SC=["--s1","--s2","--s3","--s4"];
+function color(i){return "var("+SC[i%4]+")"}
+function drawMap(p){
+  const box=$("#map"); const L=p.lines; if(!L.length){box.innerHTML="";$("#legend").innerHTML="";return}
+  const H=150, base=H-26, gap=4; const widths=L.map(l=>Math.max(14,Math.min(70,l.spoken.length*1.1)));
+  const W=widths.reduce((a,b)=>a+b+gap,0)+gap;
+  let x=W-gap; let svg=`<svg viewBox="0 0 ${W} ${H}" width="${Math.max(W,280)}" height="${H}" role="img" aria-label="خريطة قوة الإحساس لكل جملة">`;
+  svg+=`<line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="var(--line)" stroke-width="1"/>`;
+  L.forEach((l,i)=>{const w=widths[i]; x-=w; const e=energy(l.tags); const h=Math.max(4,e*(base-14));
+    const si=p.speakers.indexOf(l.speaker);
+    svg+=`<rect x="${x}" y="${base-h}" width="${w}" height="${h}" rx="4" fill="${color(si)}" opacity="${.35+e*.6}"><title>${esc(l.speaker)}: ${esc(l.tags.join(" + ")||"بدون إحساس")}</title></rect>`;
+    const tag=(l.tags[0]||"—").split(",")[0]; if(w>=24) svg+=`<text x="${x+w/2}" y="${H-8}" font-size="9" text-anchor="middle" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${esc(tag.slice(0,Math.floor(w/5.5)))}</text>`;
+    x-=gap;});
+  box.innerHTML=svg+"</svg>";
+  $("#legend").innerHTML=p.speakers.map((s,i)=>`<span><i style="background:${color(i)}"></i>${esc(s)}</span>`).join("");
+}
+function drawSpk(p){
+  const box=$("#spk"); box.innerHTML="";
+  const all=document.createElement("div");
+  p.speakers.forEach((s,i)=>{const lines=p.lines.filter(l=>l.speaker===s).map(l=>l.text); if(!lines.length) return;
+    const c=document.createElement("div");c.className="spk-card";
+    c.innerHTML=`<header><h3><i style="background:${color(i)}"></i>${esc(s)} <span class="hint">· ${ar(lines.length)} جمل</span></h3></header><pre></pre>`;
+    c.querySelector("pre").textContent=lines.join("\n");
+    const sel=document.createElement("select");sel.setAttribute("aria-label","صوت "+s);
+    sel.innerHTML='<option value="">اختر صوت لـ'+esc(s)+'…</option>'+KINDS.slice(1).map(([k,l])=>'<optgroup label="'+l+'">'+VOICES.filter(v=>v[0]===k&&v[4]).map(v=>'<option value="'+v[4]+'"'+(spkVoice[s]===v[4]?" selected":"")+'>'+esc(v[1])+'</option>').join("")+'</optgroup>').join("");
+    sel.onchange=()=>{spkVoice[s]=sel.value;try{localStorage.setItem("nabra-spkvoice",JSON.stringify(spkVoice))}catch(e){}};
+    c.appendChild(sel);
+    const b=document.createElement("button");b.className="btn ghost small";b.type="button";b.textContent="انسخ";b.onclick=()=>copy(lines.join("\n"),"نسخت جمل "+s);
+    c.querySelector("header").appendChild(b); box.appendChild(c)});
+}
+let vKind="all";
+const KLABEL=Object.fromEntries(KINDS);
+function drawVoices(){
+  const f=$("#vfilter");
+  if(!f.childElementCount){KINDS.forEach(([k,l])=>{const b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("role","tab");b.textContent=l;b.dataset.k=k;b.onclick=()=>{vKind=k;drawVoices()};f.appendChild(b)})}
+  f.querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.k===vKind)));
+  const g=$("#vgrid"); g.innerHTML="";
+  VOICES.filter(v=>vKind==="all"||v[0]===vKind).forEach(([k,n,d,t,id])=>{
+    const c=document.createElement("article");c.className="vcard";
+    c.innerHTML=`<div class="top"><div class="vn"></div></div><div class="meta"><span class="pill kind"></span><span class="pill"></span></div><p></p><div class="acts"></div>`;
+    c.querySelector(".vn").textContent=n; c.querySelector(".pill.kind").textContent=KLABEL[k]; c.querySelectorAll(".pill")[1].textContent=d; c.querySelector("p").textContent=t;
+    const a=c.querySelector(".acts");
+    if(!IN_VIEWER){
+      if(PREV[id]){const bp=document.createElement("button");bp.type="button";bp.className="btn ghost small";bp.textContent="▶ اسمع";bp.onclick=()=>playPreview(id,bp);a.appendChild(bp)}
+      if(id){const bt=document.createElement("button");bt.type="button";bt.className="btn primary small";bt.textContent="جرّبه بنصّي";bt.onclick=()=>{$("#lVoice").value=id;$("#listen").scrollIntoView({behavior:"smooth",block:"start"});$("#lText").focus()};a.appendChild(bt)}
+    }
+    const b1=document.createElement("button");b1.type="button";b1.className="btn ghost small";b1.textContent="انسخ الاسم";b1.onclick=()=>copy(n,"نسخت: "+n);a.appendChild(b1);
+    if(id){const b2=document.createElement("button");b2.type="button";b2.className="btn ghost small";b2.textContent="Voice ID";b2.title=id;b2.onclick=()=>copy(id,"نسخت الـ ID");a.appendChild(b2)}
+    g.appendChild(c)});
+}
+function drawDesign(i){
+  const p=$("#dpick");
+  if(!p.childElementCount){DESIGNS.forEach(([l],j)=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=l;b.onclick=()=>drawDesign(j);p.appendChild(b)})}
+  p.querySelectorAll("button").forEach((b,j)=>b.classList.toggle("on",j===i));
+  $("#dDesc").value=DESIGNS[i][1]; $("#dLine").value=DESIGNS[i][2]; countLine();
+}
+function countLine(){const n=$("#dLine").value.trim().length;$("#dCount").textContent=ar(n)+" حرف"+(n<100?" · زِد شوي":"")}
+$("#dLine").addEventListener("input",countLine);
+$("#dCopyDesc").onclick=()=>copy($("#dDesc").value,"نسخت الوصف");
+$("#dCopyLine").onclick=()=>copy($("#dLine").value,"نسخت الجملة");
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+let tt; function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),1800)}
+function copy(txt,msg){
+  const fallback=()=>{const t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();let ok=false;try{ok=document.execCommand("copy")}catch(e){}t.remove();toast(ok?msg:"حدد النص وانسخه يدويًا")};
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(()=>toast(msg),fallback); else fallback();
+}
+$("#copyAll").onclick=()=>copy(ta.value,"نسخت السكربت كامل");
+ta.addEventListener("input",()=>{clearTimeout(ta._t);ta._t=setTimeout(update,180)});
+dsel.addEventListener("change",()=>{try{localStorage.setItem("nabra-dialect",dsel.value)}catch(e){} update()});
+
+// ---- Claude ----
+const RULES=d=>`القواعد:
+- اكتب بلهجة ${d} عامية طبيعية، مو فصحى (إلا إذا اللهجة فصحى).
+- قبل كل جملة حط الإحساس بالإنجليزي بين قوسين مربعين، مثل [whispers] أو [excited] أو [nervous, sighs]. وغيّر الإحساس داخل الجملة إذا تغيّر الكلام.
+- استخدم الأحاسيس المجرّبة: whispers, laughs, laughs quietly, nervous, sighs, shocked, curious, excited, shouting, out of breath, screaming with joy, pause، وللشرح: clear, calm, warm, friendly, explaining, reassuring, playful, confident.
+- حط «…» مكان الوقفات والتردد، ونوّع الإحساس بين الجمل (هادي ثم حماس) عشان الصوت يصير حي.
+- الأرقام تكتب كلام، والكلمات الإنجليزية بحروف عربية.
+- شكّل بس الكلمات اللي ممكن تنقرى غلط.
+- لو أكثر من شخص: اسم الشخص في سطر لحاله ينتهي بنقطتين، وتحته جمله.
+- خلّ كلام كل شخص يناسب عمره وجنسه: الشايب والعجوز بأمثال ومفردات قديمة ونَفَس أبطأ، والبنت والشاب بمفردات اليوم.`;
+function writePrompt(){
+  const d=dsel.value,n=+$("#speakers").value,s=+$("#secs").value;
+  return `أنت كاتب سكربتات صوتية لـ ElevenLabs (نموذج v4).
+اكتب سكربت ${$("#mood").value} عن: ${$("#topic").value||"موقف يومي"}.
+عدد الأشخاص: ${n}${n>1?" (أعطهم أسماء سعودية/عربية مناسبة)":""}. الطول قرابة ${s*16} حرف (${s} ثانية).
+${RULES(d)}
+ارجع السكربت فقط، بدون مقدمة ولا شرح ولا علامات ماركداون.`}
+function fixPrompt(){
+  const p=parse(ta.value); const iss=lint(p,ta.value).map(x=>"- "+x[1]+": "+x[2]).join("\n");
+  return `صحّح هذا السكربت الصوتي لـ ElevenLabs v4 بنفس المعنى والأسلوب، وطبّق القواعد.
+${RULES(dsel.value)}
+الملاحظات:
+${iss||"- راجعه عمومًا"}
+
+السكربت:
+${ta.value}
+
+ارجع السكربت المصحح فقط، بدون شرح.`}
+
+let sample=null, ctl=null;
+const st=$("#aiStatus"), aiBtn=$("#aiBtn"), fixBtn=$("#fixBtn");
+function setFallback(){
+  aiBtn.textContent="انسخ الطلب لـ Claude"; fixBtn.textContent="انسخ طلب التصحيح";
+  st.textContent="الكتابة المباشرة مو متاحة هنا. انسخ الطلب والصقه في Claude، وبعدها الصق السكربت في المحرر.";
+  sample=false;
+}
+try{ if(window.claude&&claude.use){ claude.use("sample").then(s=>{ if(s){sample=s; st.textContent="يكتب من حسابك في Claude. أول مرة بيطلب إذنك."} else setFallback() }).catch(setFallback) } else setFallback() }catch(e){setFallback()}
+
+async function run(prompt,label){
+  if(!sample){copy(prompt,"نسخت الطلب، الصقه في Claude");return}
+  if(ctl){ctl.abort();return}
+  ctl=new AbortController(); const before=ta.value;
+  aiBtn.disabled=fixBtn.disabled=true; st.textContent="يفكر…";
+  const stopB=label==="write"?aiBtn:fixBtn; stopB.disabled=false; const oldT=stopB.textContent; stopB.textContent="وقّف";
+  try{
+    const {text,truncated}=await sample(prompt,{signal:ctl.signal,cache:false,onText:({text})=>{ta.value=clean(text);st.textContent="يكتب…"}});
+    ta.value=clean(text); st.textContent=truncated?"انقطع قبل يخلص، اطلب مدة أقصر.":"تم. راجعه وعدّل اللي تبي.";
+  }catch(e){
+    if(e&&e.code==="cancelled"){st.textContent="وقّفته.";if(!e.text) ta.value=before}
+    else if(e&&(e.code==="not_granted"||e.code==="sampling_disabled"||e.code==="not_declared"||e.code==="capability_disabled")){ta.value=before;setFallback()}
+    else if(e&&e.code==="rate_limited"){st.textContent="وصلت الحد مؤقتًا. جرّب بعد شوي.";if(!e.text) ta.value=before}
+    else if(e&&e.code==="refused"){ta.value=before;st.textContent="رفض الطلب. غيّر الموضوع وجرّب."}
+    else {st.textContent="صار خلل في الاتصال. جرّب مرة ثانية."; if(!e||!e.text) ta.value=before}
+  }finally{
+    ctl=null; aiBtn.disabled=fixBtn.disabled=false; if(sample){stopB.textContent=oldT} update();
+  }
+}
+function clean(t){return t.replace(/^```[a-z]*\n?|```$/gm,"").trim()}
+$("#aiForm").addEventListener("submit",e=>{e.preventDefault();run(writePrompt(),"write")});
+fixBtn.onclick=()=>run(fixPrompt(),"fix");
+
+// ---- Listen: ElevenLabs text-to-speech with the viewer's own key ----
+const lVoice=$("#lVoice"), lKey=$("#lKey"), lStatus=$("#lStatus"), takes=$("#takes");
+lVoice.innerHTML=KINDS.slice(1).map(([k,l])=>'<optgroup label="'+l+'">'+VOICES.filter(v=>v[0]===k&&v[4]).map(v=>'<option value="'+v[4]+'">'+esc(v[1])+' · '+esc(v[2])+'</option>').join("")+'</optgroup>').join("");
+const vName=id=>(VOICES.find(v=>v[4]===id)||[,id])[1];
+let player=null, busy=false;
+function playPreview(id,btn){
+  try{ if(player){player.pause()} player=new Audio(PREV[id]); const old=btn&&btn.textContent; if(btn) btn.textContent="…";
+    player.play().then(()=>{if(btn)btn.textContent="■ يشتغل"}).catch(()=>{toast("ما قدرت أشغّل العينة. اسمعها من موقع ElevenLabs");if(btn)btn.textContent=old});
+    player.onended=()=>{if(btn)btn.textContent=old};
+  }catch(e){toast("ما قدرت أشغّل العينة")}
+}
+try{const k=localStorage.getItem("nabra-key"); if(k){lKey.value=k;$("#lRemember").checked=true}}catch(e){}
+function keyState(){const ok=lKey.value.trim().length>10;$("#keyState").textContent=ok?"المفتاح جاهز":"بدون مفتاح";$("#keyState").className="pill"+(ok?" kind":"")}
+lKey.addEventListener("input",()=>{keyState();saveKey()});
+$("#lRemember").addEventListener("change",saveKey);
+function saveKey(){try{ if($("#lRemember").checked) localStorage.setItem("nabra-key",lKey.value.trim()); else localStorage.removeItem("nabra-key") }catch(e){}}
+$("#lShow").onclick=()=>{const p=lKey.type==="password";lKey.type=p?"text":"password";$("#lShow").textContent=p?"إخفاء":"إظهار"};
+$("#lText").addEventListener("input",()=>{$("#lCost").textContent="≈ "+ar($("#lText").value.trim().length)+" كردت"});
+$("#lText").dispatchEvent(new Event("input"));
+$("#lPrev").onclick=()=>{const id=lVoice.value; if(PREV[id]) playPreview(id,$("#lPrev")); else toast("ما عندي عينة لهذا الصوت، ولّد جملة قصيرة")};
+
+function errText(st,body){
+  const d=(body&&body.detail)||{}; const code=(d.status||d.code||"")+""; const msg=(d.message||(typeof body.detail==="string"?body.detail:""))+"";
+  if(st===401) return "المفتاح غلط أو ما فيه صلاحية Text to Speech.";
+  if(/quota|credit/i.test(code+msg)) return "خلص رصيد الكردت في حسابك.";
+  if(/unusual|free tier/i.test(msg)) return "ElevenLabs أوقفت الباقة المجانية في حسابك بسبب نشاط غير معتاد. راسل دعمهم.";
+  if(/library|paid|subscription/i.test(code+msg)) return "هذا الصوت يحتاج اشتراك مدفوع عشان يشتغل عن طريق المفتاح. جرّب صوت ثاني أو استخدمه من الموقع.";
+  if(st===404||/voice_not_found|not found/i.test(code+msg)) return "الصوت مو في أصواتك. افتحه في موقع ElevenLabs واضغط Add to my voices.";
+  if(st===429) return "طلبات كثيرة. انتظر دقيقة وجرب.";
+  return "صار خطأ ("+st+"). "+msg.slice(0,140);
+}
+async function tts(text,id,model,withLang){
+  const body={text,model_id:model}; if(withLang) body.language_code="ar";
+  let r;
+  try{ r=await fetch("https://api.elevenlabs.io/v1/text-to-speech/"+encodeURIComponent(id)+"?output_format=mp3_44100_128",{method:"POST",headers:{"xi-api-key":lKey.value.trim(),"Content-Type":"application/json","Accept":"audio/mpeg"},body:JSON.stringify(body)}); }
+  catch(e){ throw new Error("ما قدرت أوصل لـ ElevenLabs. تأكد من النت، ولو فاتح الصفحة داخل Claude نزّل الملف وافتحه من المتصفح."); }
+  if(r.ok) return await r.blob();
+  let j={}; try{j=await r.json()}catch(e){}
+  if(withLang && r.status===400 && /language/i.test(JSON.stringify(j))) return tts(text,id,model,false);
+  const err=new Error(errText(r.status,j)); err.status=r.status; throw err;
+}
+function addTake(blob,label,text){
+  const url=URL.createObjectURL(blob); const li=document.createElement("li");
+  li.innerHTML='<div class="th"><b></b><span class="hint"></span></div><audio controls></audio><a>نزّل الملف</a>';
+  li.querySelector("b").textContent=label; li.querySelector(".hint").textContent=text.slice(0,60)+(text.length>60?"…":"");
+  const au=li.querySelector("audio"); au.src=url; const a=li.querySelector("a"); a.href=url; a.download="nabra-"+label.replace(/[^\w]+/g,"-").slice(0,30)+".mp3";
+  takes.prepend(li); au.play().catch(()=>{});
+}
+function guard(){
+  if(IN_VIEWER){toast("التوليد يشتغل من ملف الصفحة على المتصفح");return false}
+  if(busy){toast("انتظر يخلص التوليد الحالي");return false}
+  if(lKey.value.trim().length<10){lKey.focus();lStatus.textContent="حط مفتاح ElevenLabs أول.";return false}
+  return true;
+}
+$("#lGen").onclick=async()=>{
+  const text=$("#lText").value.trim(); if(!text){lStatus.textContent="اكتب نص أول.";return}
+  if(!guard()) return; busy=true; lStatus.textContent="يولّد…";
+  try{const b=await tts(text,lVoice.value,$("#lModel").value,true); addTake(b,vName(lVoice.value),text); lStatus.textContent="تم. ولّد مرة ثانية لو تبي نسخة أحسن."}
+  catch(e){lStatus.textContent=e.message||"تعذّر الاتصال بـ ElevenLabs."}
+  finally{busy=false}
+};
+$("#lAll").onclick=async()=>{
+  if(!guard()) return;
+  const p=parse(ta.value); if(!p.lines.length){lStatus.textContent="السكربت فاضي.";return}
+  const missing=p.speakers.filter(s=>p.lines.some(l=>l.speaker===s)&&!spkVoice[s]);
+  if(missing.length){lStatus.textContent="اختر صوت لـ: "+missing.join("، ")+" من قسم «جاهز للصق».";$("#spk").scrollIntoView({behavior:"smooth",block:"center"});return}
+  busy=true; const parts=[];
+  try{
+    for(let i=0;i<p.lines.length;i++){const L=p.lines[i]; lStatus.textContent="يولّد جملة "+ar(i+1)+" من "+ar(p.lines.length)+" ("+L.speaker+")…";
+      parts.push(await tts(L.text,spkVoice[L.speaker],$("#lModel").value,true));
+      await new Promise(r=>setTimeout(r,700));}
+    addTake(new Blob(parts,{type:"audio/mpeg"}),"الحوار كامل",p.lines.map(l=>l.spoken).join(" ")); lStatus.textContent="تم الحوار كامل.";
+  }catch(e){lStatus.textContent=(e.message||"تعذّر الاتصال")+(parts.length?" (وقف بعد "+ar(parts.length)+" جمل)":"")}
+  finally{busy=false}
+};
+if(IN_VIEWER){
+  $("#lNote").textContent="التوليد ما يشتغل داخل Claude. نزّل ملف الصفحة وافتحه على المتصفح، وكل شي هنا يشتغل وتسمع الصوت مباشرة.";
+  $("#lBody").hidden=true;
+}
+keyState();
+
+drawVoices(); drawDesign(0); update();
+})();
+</script>
+
+</body>
+</html>
