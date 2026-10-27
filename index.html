@@ -131,7 +131,7 @@ select{appearance:auto}
 .cast{display:grid;gap:10px;background:var(--tint);border-radius:12px;padding:14px}
 .cast b{font-family:var(--f-display);font-size:15px}
 .castlist{display:grid;gap:8px}
-.castrow{display:grid;grid-template-columns:minmax(70px,auto) minmax(0,1fr) auto;gap:8px;align-items:center}
+.castrow{display:grid;grid-template-columns:minmax(70px,auto) minmax(0,1fr) auto auto;gap:8px;align-items:center}
 .castrow .who{font-weight:600;display:flex;align-items:center;gap:6px}
 .castrow .who i{width:10px;height:10px;border-radius:3px;display:inline-block}
 .castrow select{background:var(--surface)}
@@ -276,15 +276,15 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
             <button class="btn primary" type="button" id="lAll2">ولّد الحوار بهالأصوات</button>
             <span class="hint" id="castCost"></span>
           </div>
-          <p class="hint">ما عجبك صوت؟ غيّره من القائمة وولّد مرة ثانية. كل نسخة تنحفظ تحت بأسماء أصواتها عشان تقارن.</p>
+          <p class="hint">غيّر صوت أي شخص من القائمة، ويقول جمله من سكربتك بالصوت الجديد على طول. «عينة» تسمعك صوت صاحبه ببلاش. ولو رجعت لصوت جربته قبل، يشتغل من المحفوظ بدون كردت.</p>
         </div>
-        <div class="field"><label for="lText">أو جرّب جملة وحدة</label><textarea id="lText" rows="4">[shocked] من جدك؟ [pause] لا تقول إنك نسيت… [frustrated sigh] تكفى، ترى موب وقتك أبد!</textarea></div>
+        <div class="field"><label for="lText">نصّك (يقوله أي صوت تختاره)</label><textarea id="lText" rows="4">[shocked] من جدك؟ [pause] لا تقول إنك نسيت… [frustrated sigh] تكفى، ترى موب وقتك أبد!</textarea></div>
         <div class="lrow">
           <div class="field"><label for="lVoice">الصوت</label><select id="lVoice"></select></div>
           <div class="field"><label for="lModel">النموذج</label><select id="lModel"><option value="eleven_v4">v4 (الأحاسيس)</option><option value="eleven_v3">v3</option><option value="eleven_multilingual_v2">Multilingual v2</option></select></div>
         </div>
         <div class="acts-row">
-          <button class="btn primary" type="button" id="lGen">ولّد الجملة</button>
+          <button class="btn primary" type="button" id="lGen">قل نصّي</button>
           <button class="btn ghost" type="button" id="lPrev">اسمع عينة الصوت</button>
           <button class="btn ghost" type="button" id="lAll">ولّد الحوار كامل</button>
           <span class="hint" id="lCost"></span>
@@ -638,9 +638,12 @@ function drawCast(p){
     const w=document.createElement("span");w.className="who";w.innerHTML='<i style="background:'+color(p.speakers.indexOf(s))+'"></i>';w.append(s);
     const sel=document.createElement("select");sel.setAttribute("aria-label","صوت "+s);sel.innerHTML=voiceOptions(spkVoice[s]);
     sel.onchange=()=>{spkVoice[s]=sel.value;try{localStorage.setItem("nabra-spkvoice",JSON.stringify(spkVoice))}catch(e){};drawSpkSync()};
-    const pb=document.createElement("button");pb.type="button";pb.className="btn ghost small";pb.textContent="▶";pb.title="اسمع عينة الصوت";
-    pb.onclick=()=>{if(sel.value&&PREV[sel.value]) playPreview(sel.value,pb); else toast("اختر صوت فيه عينة")};
-    r.append(w,sel,pb);box.appendChild(r)});
+    const pb=document.createElement("button");pb.type="button";pb.className="btn primary small";pb.textContent="▶ جمله";pb.title="اسمع جمل "+s+" من سكربتك بهالصوت";
+    pb.onclick=()=>sayLines(s);
+    const sb=document.createElement("button");sb.type="button";sb.className="btn ghost small";sb.textContent="عينة";sb.title="عينة صاحب الصوت (ببلاش)";
+    sb.onclick=()=>{if(sel.value&&PREV[sel.value]) playPreview(sel.value,sb); else toast("اختر صوت فيه عينة")};
+    sel.addEventListener("change",()=>{ if(!IN_VIEWER && sel.value && lKey.value.trim().length>10) sayLines(s); });
+    r.append(w,sel,pb,sb);box.appendChild(r)});
   const chars=p.lines.reduce((a,l)=>a+l.spoken.length,0);$("#castCost").textContent="≈ "+ar(chars)+" كردت لكل مرة";
 }
 function drawSpkSync(){document.querySelectorAll('#spk select').forEach(x=>{const s=(x.getAttribute("aria-label")||"").replace(/^صوت /,"");if(spkVoice[s]!==undefined)x.value=spkVoice[s]})}
@@ -701,7 +704,7 @@ function drawVoices(){
     const a=c.querySelector(".acts");
     if(!IN_VIEWER){
       if(PREV[id]){const bp=document.createElement("button");bp.type="button";bp.className="btn ghost small";bp.textContent="▶ اسمع";bp.onclick=()=>playPreview(id,bp);a.appendChild(bp)}
-      if(id){const bt=document.createElement("button");bt.type="button";bt.className="btn primary small";bt.textContent="جرّبه بنصّي";bt.onclick=()=>{$("#lVoice").value=id;$("#listen").scrollIntoView({behavior:"smooth",block:"start"});$("#lText").focus()};a.appendChild(bt)}
+      if(id){const bt=document.createElement("button");bt.type="button";bt.className="btn primary small";bt.textContent="قل نصّي بهالصوت";bt.onclick=()=>{$("#lVoice").value=id;$("#listen").scrollIntoView({behavior:"smooth",block:"start"}); if(lKey.value.trim().length>10 && $("#lText").value.trim()) $("#lGen").click(); else $("#lText").focus()};a.appendChild(bt)}
     }
     const b1=document.createElement("button");b1.type="button";b1.className="btn ghost small";b1.textContent="انسخ الاسم";b1.onclick=()=>copy(n,"نسخت: "+n);a.appendChild(b1);
     if(id){const b2=document.createElement("button");b2.type="button";b2.className="btn ghost small";b2.textContent="Voice ID";b2.title=id;b2.onclick=()=>copy(id,"نسخت الـ ID");a.appendChild(b2)}
@@ -824,8 +827,10 @@ lKey.addEventListener("input",()=>{keyState();saveKey()});
 $("#lRemember").addEventListener("change",saveKey);
 function saveKey(){try{ if($("#lRemember").checked) localStorage.setItem("nabra-key",lKey.value.trim()); else localStorage.removeItem("nabra-key") }catch(e){}}
 $("#lShow").onclick=()=>{const p=lKey.type==="password";lKey.type=p?"text":"password";$("#lShow").textContent=p?"إخفاء":"إظهار"};
-$("#lText").addEventListener("input",()=>{$("#lCost").textContent="≈ "+ar($("#lText").value.trim().length)+" كردت"});
+try{const lt=localStorage.getItem("nabra-ltext"); if(lt!==null) $("#lText").value=lt}catch(e){}
+$("#lText").addEventListener("input",()=>{try{localStorage.setItem("nabra-ltext",$("#lText").value)}catch(e){};$("#lCost").textContent="≈ "+ar($("#lText").value.trim().length)+" كردت"});
 $("#lText").dispatchEvent(new Event("input"));
+lVoice.addEventListener("change",()=>{ if(!IN_VIEWER && $("#lText").value.trim() && lKey.value.trim().length>10) $("#lGen").click(); });
 $("#lPrev").onclick=()=>{const id=lVoice.value; if(PREV[id]) playPreview(id,$("#lPrev")); else toast("ما عندي عينة لهذا الصوت، ولّد جملة قصيرة")};
 
 function errText(st,body){
@@ -855,6 +860,12 @@ async function tts(text,id,model,withLang){
   if(withLang && r.status===400 && /language/i.test(JSON.stringify(j))) return tts(text,id,model,false);
   const err=new Error(errText(r.status,j)); err.status=r.status; throw err;
 }
+const TAKE_CACHE={};
+async function speak(text,id,label){
+  const prepared=prepText(text); const key=id+"|"+$("#lModel").value+"|"+prepared;
+  if(TAKE_CACHE[key]){addTake(TAKE_CACHE[key],label+" (محفوظ)",text);return}
+  const b=await tts(prepared,id,$("#lModel").value,true); TAKE_CACHE[key]=b; addTake(b,label,text);
+}
 function addTake(blob,label,text){
   const url=URL.createObjectURL(blob); const li=document.createElement("li");
   li.innerHTML='<div class="th"><b></b><span class="hint"></span></div><audio controls></audio><a>نزّل الملف</a>';
@@ -871,10 +882,19 @@ function guard(){
 $("#lGen").onclick=async()=>{
   const text=$("#lText").value.trim(); if(!text){lStatus.textContent="اكتب نص أول.";return}
   if(!guard()) return; busy=true; lStatus.textContent="يولّد…";
-  try{const b=await tts(prepText(text),lVoice.value,$("#lModel").value,true); addTake(b,vName(lVoice.value),text); lStatus.textContent="تم. ولّد مرة ثانية لو تبي نسخة أحسن."}
+  try{await speak(text,lVoice.value,vName(lVoice.value)); lStatus.textContent="هذا نصّك بصوت "+vName(lVoice.value).split(" - ")[0]+". غيّر الصوت من القائمة ويقوله الصوت الجديد على طول."}
   catch(e){lStatus.textContent=e.message||"تعذّر الاتصال بـ ElevenLabs."}
   finally{busy=false}
 };
+async function sayLines(sp){
+  if(!guard()) return;
+  const id=spkVoice[sp]; if(!id){lStatus.textContent="اختر صوت لـ"+sp+" أول.";return}
+  const lines=parse(ta.value).lines.filter(l=>l.speaker===sp).map(l=>l.text); if(!lines.length){lStatus.textContent="ما لقيت جمل لـ"+sp+" في السكربت.";return}
+  busy=true; lStatus.textContent="يقول جمل "+sp+" بصوت "+vName(id).split(" - ")[0]+"…";
+  try{await speak(lines.join("\n"),id,sp+" = "+vName(id).split(" - ")[0]); lStatus.textContent="هذي جمل "+sp+" من سكربتك. غيّر الصوت ويقولها الجديد على طول.";}
+  catch(e){lStatus.textContent=e.message||"تعذّر الاتصال بـ ElevenLabs."}
+  finally{busy=false}
+}
 $("#lAll").onclick=async()=>{
   if(!guard()) return;
   const p=parse(ta.value); if(!p.lines.length){lStatus.textContent="السكربت فاضي.";return}
