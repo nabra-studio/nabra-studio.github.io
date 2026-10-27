@@ -127,6 +127,11 @@ select{appearance:auto}
 .chip[aria-selected="true"],.chip.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 .chip.on small{color:inherit}
 .design{display:grid;gap:10px}
+.pron{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.pron h3{font-size:14px;font-family:var(--f-body);font-weight:600}
+.pchip{direction:rtl;font-family:var(--f-body);font-size:14px}
+.pchip b{color:var(--accent);font-weight:600}
+#dfilter .chip{font-family:var(--f-body);direction:rtl}
 .listen{border-color:var(--accent)}
 .lgrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px}
 .lcol{display:grid;gap:12px;align-content:start;min-width:0}
@@ -172,7 +177,7 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
   <header class="mast">
     <div>
       <h1>استوديو <span>النبرة</span></h1>
-      <p>اكتب سكربت صوتي بلهجتك وإحساسك، يفحصه لك على قواعد ElevenLabs v4، وانسخه جاهز للتوليد. بدون مايك وبدون تسجيل.</p>
+      <p>سكربتات صوتية باللهجات السعودية: نجدي، حجازي، جنوبي، شرقاوي، قصيمي، بدوي. يفحص التشكيل والنطق، وتسمعه بأصوات سعودية بس. بدون مايك وبدون تسجيل.</p>
     </div>
     <div class="wave" aria-hidden="true" id="wave"></div>
   </header>
@@ -199,6 +204,7 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
       <div class="editor-head">
         <h2 id="ed-h">السكربت</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ghost small" id="pronBtn" type="button">صحّح النطق</button>
           <button class="btn ghost small" id="fixBtn" type="button">صحّح الملاحظات</button>
           <button class="btn ghost small" id="speakerBtn" type="button">+ شخص</button>
           <button class="btn primary small" id="copyAll" type="button">انسخ السكربت</button>
@@ -218,6 +224,11 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
           <div><b id="mFree">0%</b><span>من باقة الشهر المجانية</span></div>
         </div>
         <ul class="checks" id="checks"></ul>
+        <div class="pron" id="pron" hidden>
+          <h3>تشكيل النطق السعودي</h3>
+          <p class="hint">اضغط على الكلمة عشان أشكّلها في السكربت. التشكيل يخلي الصوت ينطقها مثلنا بدل ما يقراها فصحى.</p>
+          <div class="chips" id="pronChips"></div>
+        </div>
       </section>
 
       <section class="panel" aria-labelledby="map-h">
@@ -255,6 +266,7 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
           <button class="btn ghost" type="button" id="lAll">ولّد الحوار كامل</button>
           <span class="hint" id="lCost"></span>
         </div>
+        <label class="chk"><input type="checkbox" id="lPron" checked> شكّل الكلمات الصعبة تلقائيًا قبل التوليد (يحسّن النطق السعودي)</label>
         <div class="ai-status" id="lStatus" aria-live="polite"></div>
         <ol class="takes" id="takes"></ol>
       </div>
@@ -281,7 +293,9 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
       <h2 id="v-h">الأصوات والشخصيات</h2>
       <div class="chips" id="vfilter" role="tablist" aria-label="نوع الصوت"></div>
     </div>
-    <p class="hint">أصوات عربية من مكتبة ElevenLabs. انسخ الاسم وابحث عنه في More voices، اسمعه، ثم أضفه لأصواتك. الصوت والكلام لازم يكونون من نفس اللهجة.</p>
+    <div class="chips" id="dfilter" aria-label="اللهجة">
+    </div>
+    <p class="hint">أصوات سعودية بس من مكتبة ElevenLabs، مقسمة بالعمر واللهجة. انسخ الاسم وابحث عنه في More voices، اسمعه، ثم أضفه لأصواتك. خلّ لهجة الصوت نفس لهجة الكلام.</p>
     <div class="vgrid" id="vgrid"></div>
   </section>
 
@@ -315,7 +329,7 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
       <ol class="steps">
         <li>ادخل elevenlabs.io وسوّ حساب. المجاني يعطيك عشرة آلاف كردت كل شهر، يعني قرابة عشر دقايق كلام.</li>
         <li>اضغط Text to Speech من القائمة الجانبية.</li>
-        <li>اضغط اسم الصوت ← More voices، وفلتر: Language عربي، Accent لهجتك، Category حسب نوع المحتوى.</li>
+        <li>اضغط اسم الصوت ← More voices، وفلتر: Language عربي، Accent: Saudi، Category حسب نوع المحتوى.</li>
         <li>الصق السكربت من هنا. لو أكثر من شخص، اضغط Add speaker لكل واحد.</li>
         <li>من الإعدادات ⚙ خلّ Language على Arabic.</li>
         <li>اضغط Generate. كل مرة يعطيك نسختين، اسمعهم ونزّل الأحلى.</li>
@@ -331,79 +345,97 @@ ol.steps{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-siz
 <script>
 (function(){
 const $=s=>document.querySelector(s);
-const DIALECTS=[["سعودي","Saudi"],["خليجي","Gulf"],["كويتي","Kuwaiti"],["بحريني","Bahraini"],["قطري","Qatari"],["عماني","Omani"],["عراقي","Iraqi"],["أردني","Jordanian"],["فلسطيني","Palestinian"],["شامي","Levantine"],["سوري","Syrian"],["مصري","Egyptian"],["سوداني","Sudanese"],["ليبي","Libyan"],["تونسي","Tunisian"],["جزائري","Algerian"],["مغربي","Moroccan"],["فصحى","Modern Standard"]];
+const DIALECTS=[["نجدي","Najdi"],["أبيض (سعودي عام)","White Saudi"],["حجازي","Hijazi"],["جنوبي","Southern"],["شرقاوي وحساوي","Eastern Province"],["قصيمي","Qassimi"],["شمالي","Northern"],["بدوي","Bedouin"]];
 const KINDS=[["all","الكل"],["girl","بنات"],["woman","نساء"],["oldf","عجايز"],["youngm","شباب"],["man","رجال"],["oldm","شياب"]];
-// [kind, name, dialect, note, voice_id]
+// Saudi-only. [kind, name, dialect, note, voice_id]
 const VOICES=[
- ["girl","Nouf - Saudi Commercial & Documentary","سعودي","شابة طبيعية، للإعلانات والسرد الوثائقي","VjxKp6w1MCufETfW5zFM"],
- ["girl","Wiam – Confident","فصحى","دافية وواثقة، للقصص والمحتوى التعليمي","R5kMoWNNTn84ezIJA53m"],
- ["girl","Reem","عماني","هادية وواضحة، تركب على المقاطع القصيرة","dYnGGqiuxHfLuVGVGIbi"],
- ["girl","Mimi - Lebanese (Beirut)","لبناني","ناعمة وخفيفة","NQyF5U0t336unYhQXcuv"],
- ["girl","Fatima – Loud & Engaging Influencer","مصري","حماس مؤثرات ومراجعات منتجات","Vu9gRjkR23ZG8EWrSmnj"],
- ["woman","Mona- Saudi Arabic Voice","سعودي","بيضاء دافية وواثقة، للتعليق والبودكاست","o0oG1TnHDWDdKbAeBgCO"],
- ["woman","Layan - The Professional","سعودي نجدي","ثابتة ورزينة، للمحتوى الرسمي والحوار","gVzwmdZzRgBrNjXaTmi5"],
- ["woman","Amal - Rich & Sophisticated","سعودي حجازي","فخمة وقريبة في نفس الوقت","QtQamNJjpordEbNFIlz3"],
- ["woman","Hana - Casual & Relatable","سعودي حجازي","عفوية، للسوشال والفلوقات","kdUY91gH5xyDHapxlthT"],
- ["woman","Lama – Soft Emotional","خليجي","ناعمة وعاطفية، للقصص والمقاطع السينمائية","ulJ49j1YlxrYnPoj5o12"],
- ["woman","Amira - Poised and Graceful","خليجي","رزينة، للإعلانات القصيرة","cdxrkuYK4nZwDSkjw5sa"],
- ["oldf","Noorah-Saudi Warm & Clear","سعودي شرقاوي","صوت كبيرة حنون ودافي، للحكايات والشعر","ckaeRWMtCV0u0pUT3wX1"],
- ["oldf","Latifa - Bright and Welcoming","خليجي","امرأة كبيرة حكيمة، فيها هيبة","LEqoCOGNjyExRiRUZhkv"],
- ["oldf","Samira - Rich and Commanding","خليجي","بحّة خفيفة وخبرة سنين","ZBf5V86GjdTx6Sdsex5C"],
- ["oldf","Hanan - Polished and Commanding","خليجي","ناضجة وفخمة، للوثائقي","3GgICclK01zog9nyLmX1"],
- ["oldf","Sawsan - Dignified and Warm","مصري","ناضجة هادية وبطيئة","mS4cERRqrNy5Kmlx8Udf"],
- ["youngm","Majed - Measured & Steady","سعودي نجدي","هادي وثابت، ممتاز للشرح والسرد","oJCdZCYaJobw2GlrIQm5"],
- ["youngm","Bandar","سعودي (لمسة جنوبية)","ودود وخفيف دم، للحوار والقصص","aLv8a8fbjjLsORNUDQ1J"],
- ["youngm","Ahmed - intellectual, Calm & Educational","سعودي","هادي ومرتب، للمحاضرات والشرح","etJo0VNXVmjmd5XDR7lJ"],
- ["youngm","Mohammed - Smooth Saudi Arabic","سعودي","ناعم، يركب على المحادثات",""],
- ["youngm","Ali Ahmed - Authentic Saudi Dialect","سعودي","لهجة أصيلة للحوارات",""],
- ["youngm","Saad","سعودي","واضح للشرح والتعليق",""],
- ["youngm","faisal al anqoudi","عماني","سينمائي وواثق","lXwVtAOOlP0Qf7aXOebM"],
- ["youngm","Rafoush – Young Relatable Customer Care","شامي","شاب عفوي وقريب","oOucsh1OZElozgDVjcfe"],
- ["youngm","Bilal A","أردني","عميق وأنيق","jN2L0WufWIAXnexEWTfh"],
- ["man","Mohammed Salman - Saudi Storytelling","سعودي","عميق وهادي، للوثائقي والكتب الصوتية","qby5WU0hOX8igIszsSvl"],
- ["man","Mohammad – Warm Arabic Commercial","شامي/فصحى","دافي للإعلانات","vszNunPGBVqJg1Qd4H7Z"],
- ["man","مؤمل العباس","عراقي","دافي، للإعلانات والقصص","27t8HdkwF7812XrcB2Ua"],
- ["man","Majdi - life style voice","أردني","طبيعي لمحتوى الحياة اليومية","kU20U5bOr9ND3yqlsdwV"],
- ["man","Mahmoud Soliman - Egyptian Story","مصري","قصص وغموض وتشويق","oOge1k8044i7H9hCreX6"],
- ["oldm","RAED","سعودي خليجي","شايب ببحّة خفيفة، للسرد والقصص","IK7YYZcSpmlkjKrQxbSn"],
- ["oldm","Moncellence pro","مصري","كبير هادي ومطمئن، للتأمل والكتب","Jez3JdhBInQTvlAvDOWR"]
+ ["girl","Nouf - Saudi Commercial & Documentary","أبيض","شابة طبيعية، للإعلانات والسرد","VjxKp6w1MCufETfW5zFM"],
+ ["girl","Hana - Casual & Relatable","حجازي","عفوية وخفيفة، للسوشال والفلوقات","kdUY91gH5xyDHapxlthT"],
+ ["woman","Mona- Saudi Arabic Voice","أبيض","دافية وواثقة، للتعليق والبودكاست","o0oG1TnHDWDdKbAeBgCO"],
+ ["woman","Layan - The Professional","نجدي","رزينة وثابتة، للحوار والمحتوى الرسمي","gVzwmdZzRgBrNjXaTmi5"],
+ ["woman","Amal - Rich & Sophisticated","حجازي","فخمة وقريبة، للقصص والإعلانات","QtQamNJjpordEbNFIlz3"],
+ ["oldf","Noorah-Saudi Warm & Clear","شرقاوي","كبيرة حنونة ودافية، للحكايات والشعر","ckaeRWMtCV0u0pUT3wX1"],
+ ["youngm","Majed - Measured & Steady","نجدي","هادي وثابت، ممتاز للشرح والسرد","oJCdZCYaJobw2GlrIQm5"],
+ ["youngm","Bandar","جنوبي","ودود وخفيف دم، للحوار والقصص","aLv8a8fbjjLsORNUDQ1J"],
+ ["youngm","ZAID","أبيض","شبابي ودافي، للسوشال والسوالف","2ihxUjDCpcIKZE1cz08X"],
+ ["youngm","ALI - Saudi Arabic & English","أبيض","معبّر، ينتقل بين الجد والمزح","Hvlnv5DwiIO2CQ6oYMZ3"],
+ ["youngm","Ahmed - intellectual, Calm & Educational","أبيض","هادي ومرتب، للشرح والمحاضرات","etJo0VNXVmjmd5XDR7lJ"],
+ ["man","Ziyad – Natural Saudi Arabic","نجدي","طبيعي وواثق، للسرد والإعلانات","pNGUEZc2WLum9bjP611g"],
+ ["man","Abdulrahman - Energetic Najdi Saudi Ads","نجدي","حماسي للإعلانات والعروض","KfYUTAF49N2CPU3iKuMi"],
+ ["man","Fahad - Saudi, Warm & Confident","أبيض","دافي وواضح، للقصص والشرح","rpGHcNQJvO8dFNNFNj1v"],
+ ["man","Nasser AlJubaily - Authentic Saudi Pro","أبيض","دافي، يركب على الإعلانات القصيرة","cFUFIbKkO2iZFwS8cRnY"],
+ ["man","Ali Ahmed - Authentic Saudi Dialect","أبيض","لهجة أصيلة للسوالف والإعلانات","OoE8swS3hImZANNOodf6"],
+ ["man","Khalid Alghamdi – Natural Saudi Narrator","أبيض","راوي طبيعي، للقصص والفيديوهات","0zaDRVgeUEbapG2oh3z5"],
+ ["man","Mohammed Salman - Saudi Storytelling","أبيض","عميق وهادي، للوثائقي والكتب","qby5WU0hOX8igIszsSvl"],
+ ["man","Ahmad - Calm Saudi Narrator, Podcast","أبيض","هادي للبودكاست والتعليم","UXEyt6rtmFO9w5hBhzq9"],
+ ["man","Abdullah - Saudi Arabic Narrator","أبيض","راوي واضح لليوتيوب والقصص","usjDi9nBY6UHvtKrL4ba"],
+ ["man","Ali - calm & Deep Arabic Saudi Narrator","أبيض","عميق ورزين للسرد الطويل","MI88rOZjXbH22N8KHXUo"],
+ ["man","Saud - deep voice","أبيض","عميق ورسمي، للتوعية والأخبار","3nav5pHC1EYvWOd5LmnA"],
+ ["man","Ahmed Habib - Friendly & Warm","شرقاوي","ودود ودافي، للسوالف والقصص","Md1KUcUWjeZcdTRV2RKU"],
+ ["man","Hasawi - Conversational and Energize","حساوي","حساوي أصيل، فيه حيوية وترحيب","kr4VZw8MSZMHE0y2m40n"],
+ ["oldm","RAED","سعودي","شايب ببحّة خفيفة، للسرد والقصص","IK7YYZcSpmlkjKrQxbSn"]
 ];
 const DESIGNS=[
- ["شايب نجدي","An elderly Saudi man in his seventies from Najd. Deep, slightly raspy voice, slow and deliberate pace, warm grandfatherly wisdom, authentic Najdi Arabic accent.","يا وليدي، الدنيا ما تعطي أحد كل شي. أنا يوم كنت بعمرك كنا نمشي للسوق على رجولنا، ونرجع وحنا مبسوطين بالقليل. اسمع مني وخذ العلم من أبوك."],
- ["عجوز نجدية","An elderly Saudi woman in her seventies. Soft but firm voice with a gentle rasp, affectionate grandmotherly tone, slow pace, authentic Najdi Arabic accent.","تعال يا بعد قلبي، اجلس جنبي. سويت لك القهوة والتمر مثل ما تحب. وش فيك ساكت؟ قل لي وش اللي مضايقك، ترى جدتك تفهمك من نظرة."],
- ["بنت جامعية","A Saudi woman in her early twenties. Bright, lively and expressive voice, quick natural pace, casual Riyadh Saudi accent, friendly and funny.","يا بنات لازم أعلمكم وش صار اليوم! رحت الجامعة متأخرة ودخلت القاعة بهدوء، وفجأة الدكتورة نادت اسمي قدام الكل. بغيت أختفي من الإحراج والله."],
- ["أم سعودية","A Saudi mother in her forties. Warm, caring voice with a hint of firmness, clear medium pace, Saudi Najdi accent.","يا عيالي الساعة صارت تسع، يلا كل واحد على فراشه. بكرة دوام ومدارس، وأبيكم تصحون بدري بدون ما أنادي عشر مرات. وأحلام سعيدة يا حبايبي."],
- ["شاب حماسي","A Saudi young man in his twenties. Energetic, upbeat and playful voice, confident, fast pace, casual Saudi accent, made for social media.","يا جماعة الخير اسمعوا! لقيت لكم مكان في الرياض ما أحد يعرف عنه، القهوة فيه شي ثاني والجلسة تفتح النفس. لا تقولون ما قلت لكم، جربوه وردوا لي خبر."],
- ["بدوي","A Bedouin man in his fifties from the Saudi desert. Deep, resonant voice, proud and poetic delivery, slow pace, authentic Bedouin Arabic accent.","الليل في البر غير، والنجوم تقرب منك كأنها تبي تسولف. نشب النار ونصب القهوة، ونتذكر أيام أول يوم الرجال كلمتهم وعد ما يرجعون فيه."],
- ["راوي فخم","A mature Saudi male narrator. Deep cinematic voice, calm and authoritative, measured documentary pace, Saudi accent.","قبل ألف سنة، كانت هذي الأرض طريق القوافل بين الشرق والغرب. هنا مرّ التجار والشعراء والرحالة، وتركوا وراهم حكايات ما زالت الرمال تحفظها إلى اليوم."]
+ ["شايب نجدي","An elderly Saudi man in his seventies from Najd, central Saudi Arabia. Deep, slightly raspy voice, slow and deliberate pace, warm grandfatherly wisdom. Authentic Najdi accent: pronounces qaf as 'g' and speaks colloquial Najdi, not Modern Standard Arabic.","يا وْلِيدي، الدنيا ما تعطي أحد كل شي. أنا يوم كنت بعمرك كنّا نمشي للسوق على رجولنا، ونرجع وحنّا مبسوطين بالقليل. اسمع مِنّي، ترى الرِّجَّال بكلمته."],
+ ["عجوز نجدية","An elderly Saudi woman in her seventies from Najd. Soft but firm voice with a gentle rasp, affectionate grandmotherly tone, slow pace. Authentic old Najdi accent that turns the feminine 'k' into 'ts' (kashkasha), colloquial, not Modern Standard Arabic.","تعالي يا بعد قلبي، اجلسي جنبي. سوّيت لتس القهوة والتمر مثل ما تحبّين. وِش فيتس ساكتة؟ قولي لي وش اللي مضايقتس، ترى جدّتس تفهمتس من نظرة."],
+ ["بنت حجازية","A young Saudi woman in her early twenties from Jeddah. Bright, lively, playful voice, quick natural pace. Authentic Hijazi accent, casual and colloquial, not Modern Standard Arabic.","يا بنات إيش اللي صار اليوم! رحت الجامعة متأخرة، وأول ما دخلت القاعة الدكتورة نادتني قدّام الكل. وأنا كِدا واقفة مو عارفة إيش أقول، وبرضو ضحكت من الإحراج."],
+ ["أم نجدية","A Saudi mother in her forties from Riyadh. Warm, caring voice with a hint of firmness, clear medium pace. Natural Najdi Saudi accent, colloquial.","يا عيالي الساعة صارت تسع، يلّا كل واحد على فراشه. بكرة دوام ومدارس، وأبيكم تصحون بدري بدون ما أناديكم عشر مرّات. الله يحفظكم يا حبايبي."],
+ ["شاب جنوبي","A Saudi young man in his twenties from the southern region (Asir/Abha). Friendly, warm, lively voice, natural pace. Authentic southern Saudi accent, colloquial.","يا هلا والله باللي جانا، حيّاكم في أبها. الجو هنا غير، والضباب ينزل على الجبال كأنه يسلّم عليك. اشرب قهوتك على مهلك، ترى الوقت هنا يمشي بهدوء."],
+ ["حساوي","A Saudi man in his forties from Al-Ahsa in the Eastern Province. Warm, welcoming, hospitable voice, relaxed pace. Authentic Hasawi accent, colloquial.","هلا والله وغلا، حيّاك في الأحساء. النخل هنا له طعم ثاني، والتمر ما له مثيل. تعال تقهوى عندنا، ترى الضيف عندنا له مكانة غير."],
+ ["بدوي شمالي","A Bedouin Saudi man in his fifties from the northern desert. Deep, resonant voice, proud and poetic delivery, slow pace. Authentic Bedouin northern Saudi accent, colloquial.","الليل في البر غير، والنجوم تقرّب منك كأنها تبي تسولف. نشبّ النار ونصبّ القهوة، ونتذكر أيام أوّل يوم الرجال كلمتهم وعد ما يرجعون فيه."],
+ ["قصيمي","A Saudi man in his sixties from Al-Qassim. Warm, witty, slightly raspy voice, medium pace. Authentic Qassimi Najdi accent with kashkasha, colloquial.","وين رحتي يا بنيّتي؟ أبوتس يدوّر عليتس من الصبح. قولي له إنتس عند خالتس، وتعالي بسرعة قبل يبرد العشا."]
 ];
 const VOICE_NAMES=VOICES.map(v=>v[1]);
 const GS="https://storage.googleapis.com/eleven-public-prod/database/workspace/";
 const PREV={
  VjxKp6w1MCufETfW5zFM:GS+"75e37208cdc1469d890173cc38b34fbc/voices/VjxKp6w1MCufETfW5zFM/bad8b32a-ace1-427d-b7d3-34a7754ebb51.mp3",
- R5kMoWNNTn84ezIJA53m:GS+"0863f76ed3fb42a7a576877dba4bddf1/voices/R5kMoWNNTn84ezIJA53m/815403ae-8e6b-430a-bc88-def48e534ade.mp3",
- dYnGGqiuxHfLuVGVGIbi:GS+"4a3de51fea5440b6a2b8fc675ee69b91/voices/dYnGGqiuxHfLuVGVGIbi/dbbb37c6-fe15-4ebd-b21c-aec40730dcf5.mp3",
+ kdUY91gH5xyDHapxlthT:"https://api.us.elevenlabs.io/v1/voices/kdUY91gH5xyDHapxlthT/previews/audio?payload=eyJ2b2ljZV9zb3VyY2UiOiJjdXN0b20iLCJ3b3Jrc3BhY2VfaWQiOiIxZGEwNmVhNjc5YTU0OTc1YWQ5NmEyMjIxZmU2NTMwZCIsImZpbGVuYW1lIjoiZGEwZDg4MDMtNjdmNy00OTc3LWFlN2ItNTVjY2M2NTNmZjcxLm1wMyIsInRpbWVzdGFtcCI6MTc5MzEwOTYwMDAwMDAwMH0%3D",
  o0oG1TnHDWDdKbAeBgCO:GS+"a9b951cc33e945ad9c94b1cd45454096/voices/o0oG1TnHDWDdKbAeBgCO/lqS4F9GMvaxS4wpT5zRC.mp3",
  gVzwmdZzRgBrNjXaTmi5:GS+"1da06ea679a54975ad96a2221fe6530d/voices/gVzwmdZzRgBrNjXaTmi5/f17f1511-6e5a-4e4b-be07-4f65e0f6a782.mp3",
  QtQamNJjpordEbNFIlz3:GS+"1da06ea679a54975ad96a2221fe6530d/voices/QtQamNJjpordEbNFIlz3/af9a0781-2de8-4b17-b67c-6089ac443533.mp3",
- ulJ49j1YlxrYnPoj5o12:GS+"4779d642527146e49c2cbb75f08dfb34/voices/ulJ49j1YlxrYnPoj5o12/oSwaEvKtBimWxCLuMHKE.mp3",
  ckaeRWMtCV0u0pUT3wX1:GS+"f5102162ca8b4443ba97059db4cad81a/voices/ckaeRWMtCV0u0pUT3wX1/y5cjoLkv19wwALaQNu5T.mp3",
- LEqoCOGNjyExRiRUZhkv:GS+"1da06ea679a54975ad96a2221fe6530d/voices/LEqoCOGNjyExRiRUZhkv/02778b57-9520-4a92-9b51-3b180faf3d32.mp3",
- ZBf5V86GjdTx6Sdsex5C:GS+"1da06ea679a54975ad96a2221fe6530d/voices/ZBf5V86GjdTx6Sdsex5C/97K6hruBJV59RxAy1xBA.mp3",
- "3GgICclK01zog9nyLmX1":GS+"1da06ea679a54975ad96a2221fe6530d/voices/3GgICclK01zog9nyLmX1/WixflmCxU5UWYJSyrN7q.mp3",
- mS4cERRqrNy5Kmlx8Udf:GS+"1da06ea679a54975ad96a2221fe6530d/voices/mS4cERRqrNy5Kmlx8Udf/MbcvYjlwXhnJn6mw32qv.mp3",
  oJCdZCYaJobw2GlrIQm5:GS+"1da06ea679a54975ad96a2221fe6530d/voices/oJCdZCYaJobw2GlrIQm5/c2cfba96-f625-4789-81ff-a05f685453f6.mp3",
+ aLv8a8fbjjLsORNUDQ1J:"https://api.us.elevenlabs.io/v1/voices/aLv8a8fbjjLsORNUDQ1J/previews/audio?payload=eyJ2b2ljZV9zb3VyY2UiOiJjdXN0b20iLCJ3b3Jrc3BhY2VfaWQiOiI2YzY3ZDEyNzg4ZGE0Njk4OTVlMGVjNTRiZDcwYTYyZSIsImZpbGVuYW1lIjoiMGE2NDc0M2UtYjAyOS00N2Y1LWFiYjEtMmQ5NjVmODUyZGVkLm1wMyIsInRpbWVzdGFtcCI6MTc5MzEwOTYwMDAwMDAwMH0%3D",
+ "2ihxUjDCpcIKZE1cz08X":GS+"094ad1ce03c24a85942f119438e5c9ca/voices/2ihxUjDCpcIKZE1cz08X/46bfdf67-12e7-4ede-a3d9-f0686bc8d04c.mp3",
+ Hvlnv5DwiIO2CQ6oYMZ3:GS+"3ac30f84d0bc4df788cd4eb1935fd02a/voices/Hvlnv5DwiIO2CQ6oYMZ3/b5522d28-85f8-404e-a0c5-adfed2f30a4b.mp3",
  etJo0VNXVmjmd5XDR7lJ:GS+"7d668731b856414bbb372d5c271815c4/voices/etJo0VNXVmjmd5XDR7lJ/vPGDdGUXUBgOKv7ewWqb.mp3",
- lXwVtAOOlP0Qf7aXOebM:GS+"1a3b0becfefd4b3ea6ebd12931f79744/voices/lXwVtAOOlP0Qf7aXOebM/rNDpvIEM9bWWq134RCfQ.mp3",
- oOucsh1OZElozgDVjcfe:GS+"ed9b05e6324c457685490352e9a1ec90/voices/oOucsh1OZElozgDVjcfe/8RFdohLXEw5dpW9F8B6T.mp3",
- jN2L0WufWIAXnexEWTfh:GS+"b3995c9329b94e0c9c8350c308b4fd8f/voices/jN2L0WufWIAXnexEWTfh/o7Xy2MePzzdDopdHIlT2.mp3",
+ pNGUEZc2WLum9bjP611g:GS+"a1e50484fcb4491eb6703614709a9292/voices/pNGUEZc2WLum9bjP611g/e4da181c-3c6f-45fc-9c02-8fe9a89fc403.mp3",
+ KfYUTAF49N2CPU3iKuMi:GS+"4303df1ace534286bee30ae935410e49/voices/KfYUTAF49N2CPU3iKuMi/Lp0DFqkAYt71tVh3CuUF.mp3",
+ rpGHcNQJvO8dFNNFNj1v:GS+"fcc0b35d7e6b4ac2aeb6960adad0de2b/voices/rpGHcNQJvO8dFNNFNj1v/9f4TVSSzWqghvVcJYMqv.mp3",
+ cFUFIbKkO2iZFwS8cRnY:GS+"763dfb027d0443b38b9506ae34f03f1f/voices/cFUFIbKkO2iZFwS8cRnY/Z0Zqvkcf6nQrZM6HyT4C.mp3",
+ OoE8swS3hImZANNOodf6:GS+"96c18b9d6a8f40f6ab2580c323d33dd5/voices/OoE8swS3hImZANNOodf6/q1wuGbArPh5XqaIIya7Y.mp3",
+ "0zaDRVgeUEbapG2oh3z5":"https://api.us.elevenlabs.io/v1/voices/0zaDRVgeUEbapG2oh3z5/previews/audio?payload=eyJ2b2ljZV9zb3VyY2UiOiJjdXN0b20iLCJ3b3Jrc3BhY2VfaWQiOiJjZDU0NDQzZTJiNGY0MjI0YjA4OGEzMTM4YzExODA0ZiIsImZpbGVuYW1lIjoiSE01YzE1UmxtNmZJdFltZUE5NE8ubXAzIiwidGltZXN0YW1wIjoxNzkzMTA5NjAwMDAwMDAwfQ%3D%3D",
  qby5WU0hOX8igIszsSvl:GS+"b704d745f0e542b0b43eba045ff37919/voices/qby5WU0hOX8igIszsSvl/x94umH6QdsNvtx1U9VvG.mp3",
- vszNunPGBVqJg1Qd4H7Z:GS+"6c9f8d9ce1e443569bb0c5536b29bdbd/voices/vszNunPGBVqJg1Qd4H7Z/xTtj5e6JMEUsSqsZOuiw.mp3",
- "27t8HdkwF7812XrcB2Ua":GS+"a58e71bbcbb94200873108f251de02f5/voices/27t8HdkwF7812XrcB2Ua/xbqDxGWSffTuwN47iMc3.mp3",
- kU20U5bOr9ND3yqlsdwV:GS+"0f56d8417f704908b9279330f8abe188/voices/kU20U5bOr9ND3yqlsdwV/eKlV7o73pSYMrp8fvtld.mp3",
- IK7YYZcSpmlkjKrQxbSn:"https://storage.googleapis.com/eleven-public-prod/2IWzWT3G3sgilYJywwA1YhbUxU73/voices/IK7YYZcSpmlkjKrQxbSn/23430e54-d41e-4b40-b321-9e5a9f3018b4.mp3",
- Jez3JdhBInQTvlAvDOWR:"https://storage.googleapis.com/eleven-public-prod/database/user/EryykDAqKOYeUKhmmdSqwmVHnSG2/voices/Jez3JdhBInQTvlAvDOWR/IBYYI30FXYplxKck4yIz.mp3"
+ UXEyt6rtmFO9w5hBhzq9:GS+"fb4001baccfa4965b0c109dba42e0d87/voices/UXEyt6rtmFO9w5hBhzq9/1ec00e83-93e8-4a3c-b43f-b4cf406206f3.mp3",
+ usjDi9nBY6UHvtKrL4ba:"https://api.us.elevenlabs.io/v1/voices/usjDi9nBY6UHvtKrL4ba/previews/audio?payload=eyJ2b2ljZV9zb3VyY2UiOiJjdXN0b20iLCJ3b3Jrc3BhY2VfaWQiOiIxNTgxOGZmNWVhYzY0NzdjOWZjM2YyMzA0ZmMxNGMyMiIsImZpbGVuYW1lIjoiQlo5UGh0bjhOWlVMVUQ4WTJhN2EubXAzIiwidGltZXN0YW1wIjoxNzkzMTA5NjAwMDAwMDAwfQ%3D%3D",
+ MI88rOZjXbH22N8KHXUo:"https://storage.googleapis.com/eleven-public-prod/database/user/user_5601kfrbk9dme3jv5efb01ga1cw4/voices/MI88rOZjXbH22N8KHXUo/tEDpNK5XPRbg9GycYuhT.mp3",
+ "3nav5pHC1EYvWOd5LmnA":"https://storage.googleapis.com/eleven-public-prod/database/user/AVjgDrd8Aiar3V1JqgW1BH4HaBx2/voices/3nav5pHC1EYvWOd5LmnA/c6e3bcb4-6ed4-407c-b727-cb505ea06b4a.mp3",
+ Md1KUcUWjeZcdTRV2RKU:GS+"4ae8421271a34bbea51c0ebede01ac2c/voices/Md1KUcUWjeZcdTRV2RKU/w4WXZLXzfxlkLDrE7F8M.mp3",
+ kr4VZw8MSZMHE0y2m40n:GS+"9f30948d4b8c4f32a5f9ee607f5c7505/voices/kr4VZw8MSZMHE0y2m40n/NoruGZycnT7kDE2v32lJ.mp3",
+ IK7YYZcSpmlkjKrQxbSn:"https://storage.googleapis.com/eleven-public-prod/2IWzWT3G3sgilYJywwA1YhbUxU73/voices/IK7YYZcSpmlkjKrQxbSn/23430e54-d41e-4b40-b321-9e5a9f3018b4.mp3"
 };
+// ---- Saudi pronunciation helpers ----
+// Words TTS often misreads in Saudi speech -> the diacritized spelling to send.
+const PRON={"وش":"وِش","ليش":"لِيش","الحين":"الحِين","زين":"زِين","مره":"مَرَّه","مرّه":"مَرَّه","كذا":"كِذا","هذي":"هَذِي","هذولا":"هَذُولا","هذاك":"هَذاك","مدري":"مَدْري","ودي":"وِدِّي","ودّي":"وِدِّي","يبه":"يُبَه","يمه":"يُمَّه","يمّه":"يُمَّه","رجال":"رِجَّال","رجّال":"رِجَّال","عيال":"عْيَال","شفت":"شِفْت","قلت":"قِلْت","سويت":"سَوَّيت","سوّيت":"سَوَّيت","خل":"خَلّ","خلّ":"خَلّ","حيل":"حَيْل","مب":"مُب","موب":"مُوب","شوي":"شْوَي","قاعد":"قَاعِد","تكفى":"تَكْفى","ترى":"تَرى","يالله":"يَالله","يلا":"يَلّا","تبي":"تَبِي","تبغى":"تَبْغَى","أبغى":"أَبْغَى","ابغى":"أَبْغَى","أدري":"أَدْري","ادري":"أَدْري","طيب":"طَيِّب","ابشر":"أَبْشِر","أبشر":"أَبْشِر","حياك":"حَيَّاك","حيّاك":"حَيَّاك","عساك":"عَسَاك","وشلونك":"وِشْلُونَك","إيش":"إِيش","ايش":"إِيش","دحين":"دَحِين","كدا":"كِدا","برضو":"بَرْضُو","مو":"مُو","إيه":"إِيه","ايه":"إِيه","يعني":"يَعْني","أحد":"أَحَد","وين":"وِين","متى":"مِتى","كيفك":"كِيفَك","هلا":"هَلا","غلا":"غَلا","بكرة":"بُكْرَة","بكره":"بُكْرَه","أمس":"أَمْس","توه":"تَوّه","توّه":"تَوّه","بس":"بَس"};
+// Formal / other-dialect words that break a Saudi script -> Saudi equivalent.
+const NON_SAUDI={"ماذا":"وش","لماذا":"ليش","الآن":"الحين","سوف":"بـ…","جداً":"مرّه / حيل","جدا":"مرّه / حيل","أريد":"أبي / أبغى","هكذا":"كذا","أيضاً":"بعد / كمان","أيضا":"بعد / كمان","ليس":"مو / مب","نعم":"إيه","ذهبت":"رحت","شلون":"وشلون / كيف","شلونك":"وشلونك / كيفك","شلونكم":"وشلونكم / كيفكم","تريد":"تبي / تبغى","أذهب":"أروح","شنهو":"وش هو","هالحين":"الحين","شنو":"وش","وايد":"مرّه / حيل","هسه":"الحين","هلق":"الحين","ازاي":"كيف","عايز":"أبي","كتير":"مرّه","منيح":"زين","شو":"وش"};
+const AR="\u0621-\u064A\u0671-\u06D3";
+function wordRe(w){return new RegExp("(^|[^"+AR+"\u064B-\u0652])("+w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")(?=$|[^"+AR+"\u064B-\u0652])","g")}
+function pronScan(text){
+  const spoken=text.replace(/\[[^\]]*\]/g," ");
+  const fixes=[],warns=[];
+  for(const [k,v] of Object.entries(PRON)){ if(wordRe(k).test(spoken)) fixes.push([k,v]); }
+  for(const [k,v] of Object.entries(NON_SAUDI)){ if(wordRe(k).test(spoken)) warns.push([k,v]); }
+  if(/[چڤگ]/.test(spoken)) warns.push(["حروف چ ڤ گ","الصوت ممكن ما يقراها، اكتب ك أو ق"]);
+  return {fixes,warns};
+}
+function applyPron(text,only){
+  return text.split(/(\[[^\]]*\])/).map(part=>{
+    if(part.startsWith("[")) return part;
+    for(const [k,v] of Object.entries(PRON)){ if(only && only!==k) continue; part=part.replace(wordRe(k),(m,a)=>a+v); }
+    return part;
+  }).join("");
+}
 // Inside a Claude viewer the page can't reach ElevenLabs; the downloaded file can.
 const IN_VIEWER=!!window.claude;
 const spkVoice={}; try{Object.assign(spkVoice,JSON.parse(localStorage.getItem("nabra-spkvoice")||"{}"))}catch(e){}
@@ -492,7 +524,9 @@ function lint(p,text){
   const letters=(text.match(/[ء-ي]/g)||[]).length, har=(text.match(/[ً-ْ]/g)||[]).length;
   if(letters>40 && har/letters>.18) issues.push(["warn","تشكيل كثير","شكّل الكلمات اللي تنقرى غلط بس، مو الكلام كله."]);
   if(/\[[^\]]*$/m.test(text)||/^[^\[]*\]/m.test(text)) issues.push(["bad","قوس ناقص","فيه إحساس ما تسكّر قوسه."]);
-  const d=dsel.value; if(d!=="سعودي") issues.push(["warn","تأكد من الصوت","اختر صوت من فلتر Accent ("+(DIALECTS.find(x=>x[0]===d)||[,""])[1]+") عشان ما يطلع خليط."]);
+  const pr=pronScan(text);
+  pr.warns.forEach(([w,s])=>issues.push(["bad","كلمة مو سعودية: «"+w+"»","قلها بالسعودي: "+s+". الكلام الفصيح أو من لهجة ثانية يخرّب نطق الصوت."]));
+  if(pr.fixes.length) issues.push(["warn","كلمات تحتاج تشكيل ("+ar(pr.fixes.length)+")","الصوت ممكن يقراها فصحى أو غلط. اضغط «صحّح النطق» أو اختر كلمة كلمة تحت."]);
   if(p.lines.length>1){const es=p.lines.map(L=>energy(L.tags)); if(Math.max(...es)-Math.min(...es)<.2) issues.push(["warn","الإحساس ثابت","نوّع بين جمل هادية وجمل حماس، الصوت يصير أحيا."]);}
   return issues;
 }
@@ -510,7 +544,14 @@ function update(){
   else if(!iss.length){const li=document.createElement("li");li.className="good";li.innerHTML="<b>جاهز</b><span>ما فيه ملاحظات. جرّب أول جملة لحالها قبل تولّد الكل.</span>";ul.appendChild(li)}
   iss.slice(0,8).forEach(([k,a,b])=>{const li=document.createElement("li");li.className=k;const x=document.createElement("b");x.textContent=a;const y=document.createElement("span");y.textContent=b;li.append(x,y);ul.appendChild(li)});
   if(iss.length>8){const li=document.createElement("li");li.className="warn";li.textContent="و"+ar(iss.length-8)+" ملاحظات ثانية. اضغط «صحّح الملاحظات».";ul.appendChild(li)}
-  drawMap(p); drawSpk(p);
+  drawMap(p); drawSpk(p); drawPron(text);
+}
+function drawPron(text){
+  const {fixes}=pronScan(text); const box=$("#pron"), c=$("#pronChips"); c.innerHTML="";
+  box.hidden=!fixes.length;
+  fixes.forEach(([k,v])=>{const b=document.createElement("button");b.type="button";b.className="chip pchip";
+    const s1=document.createElement("span");s1.textContent=k;const ar_=document.createElement("small");ar_.textContent="←";const s2=document.createElement("b");s2.textContent=v;
+    b.append(s1,ar_,s2);b.onclick=()=>{ta.value=applyPron(ta.value,k);update();toast("شكّلت: "+v)};c.appendChild(b)});
 }
 
 const SC=["--s1","--s2","--s3","--s4"];
@@ -543,14 +584,19 @@ function drawSpk(p){
     const b=document.createElement("button");b.className="btn ghost small";b.type="button";b.textContent="انسخ";b.onclick=()=>copy(lines.join("\n"),"نسخت جمل "+s);
     c.querySelector("header").appendChild(b); box.appendChild(c)});
 }
-let vKind="all";
+let vKind="all", vDial="all";
 const KLABEL=Object.fromEntries(KINDS);
 function drawVoices(){
   const f=$("#vfilter");
   if(!f.childElementCount){KINDS.forEach(([k,l])=>{const b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("role","tab");b.textContent=l;b.dataset.k=k;b.onclick=()=>{vKind=k;drawVoices()};f.appendChild(b)})}
   f.querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.k===vKind)));
+  const df=$("#dfilter");
+  if(!df.childElementCount){["كل اللهجات",...new Set(VOICES.map(v=>v[2]))].forEach((l,i)=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=l;b.dataset.d=i?l:"all";b.onclick=()=>{vDial=b.dataset.d;drawVoices()};df.appendChild(b)})}
+  df.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.d===vDial));
   const g=$("#vgrid"); g.innerHTML="";
-  VOICES.filter(v=>vKind==="all"||v[0]===vKind).forEach(([k,n,d,t,id])=>{
+  const list=VOICES.filter(v=>(vKind==="all"||v[0]===vKind)&&(vDial==="all"||v[2]===vDial));
+  if(!list.length){const e=document.createElement("p");e.className="hint";e.textContent="ما فيه صوت جاهز بهذا النوع واللهجة. صمّمه من القسم اللي تحت.";g.appendChild(e)}
+  list.forEach(([k,n,d,t,id])=>{
     const c=document.createElement("article");c.className="vcard";
     c.innerHTML=`<div class="top"><div class="vn"></div></div><div class="meta"><span class="pill kind"></span><span class="pill"></span></div><p></p><div class="acts"></div>`;
     c.querySelector(".vn").textContent=n; c.querySelector(".pill.kind").textContent=KLABEL[k]; c.querySelectorAll(".pill")[1].textContent=d; c.querySelector("p").textContent=t;
@@ -585,8 +631,21 @@ ta.addEventListener("input",()=>{clearTimeout(ta._t);ta._t=setTimeout(update,180
 dsel.addEventListener("change",()=>{try{localStorage.setItem("nabra-dialect",dsel.value)}catch(e){} update()});
 
 // ---- Claude ----
+const DIALECT_HINTS={
+ "نجدي":"مفردات نجدية: وش، ليش، الحين، أبي، زين، مرّه، يا رجّال، ترى، مدري، وشلونك.",
+ "أبيض (سعودي عام)":"سعودي أبيض يفهمه الكل: وش، ليش، الحين، أبغى، مرّه، كذا، طيب.",
+ "حجازي":"مفردات حجازية: إيش، ليش، دحين، أبغى، كِدا، برضو، مرّة، يا شيخ.",
+ "جنوبي":"لهجة جنوبية سعودية هادية وودودة، مع ترحيب وكرم في الكلام.",
+ "شرقاوي وحساوي":"لهجة الشرقية والأحساء، فيها ترحيب ودفا، بدون مفردات كويتية أو بحرينية.",
+ "قصيمي":"قصيمي نجدي، والكاف للمؤنث تنقلب «تس»: عليتس، أبوتس، وش فيتس.",
+ "شمالي":"لهجة شمالية سعودية قريبة من البدوية.",
+ "بدوي":"لهجة بدوية سعودية فيها فخر وشعر وأمثال: يا هلا، حيّ الله، نشبّ النار ونصبّ القهوة."
+};
 const RULES=d=>`القواعد:
-- اكتب بلهجة ${d} عامية طبيعية، مو فصحى (إلا إذا اللهجة فصحى).
+- اكتب باللهجة السعودية (${d}) العامية الطبيعية فقط. ممنوع الفصحى، وممنوع مفردات خليجية أو شامية أو مصرية (مثل شلون، شنو، وايد، شو، ازاي).
+- ${DIALECT_HINTS[d]||""}
+- شكّل الكلمات اللي ينقراها الصوت فصحى أو غلط، مثل: وِش، لِيش، الحِين، زِين، مَرَّه، كِذا، هَذِي، مَدْري، رِجَّال، تَكْفى، تَرى، مُو، يَلّا. ولا تشكّل الكلام كله.
+- اكتب الكلمة مثل ما تنقال، مو مثل ما تنكتب في الفصحى.
 - قبل كل جملة حط الإحساس بالإنجليزي بين قوسين مربعين، مثل [whispers] أو [excited] أو [nervous, sighs]. وغيّر الإحساس داخل الجملة إذا تغيّر الكلام.
 - استخدم الأحاسيس المجرّبة: whispers, laughs, laughs quietly, nervous, sighs, shocked, curious, excited, shouting, out of breath, screaming with joy, pause، وللشرح: clear, calm, warm, friendly, explaining, reassuring, playful, confident.
 - حط «…» مكان الوقفات والتردد، ونوّع الإحساس بين الجمل (هادي ثم حماس) عشان الصوت يصير حي.
@@ -598,7 +657,7 @@ function writePrompt(){
   const d=dsel.value,n=+$("#speakers").value,s=+$("#secs").value;
   return `أنت كاتب سكربتات صوتية لـ ElevenLabs (نموذج v4).
 اكتب سكربت ${$("#mood").value} عن: ${$("#topic").value||"موقف يومي"}.
-عدد الأشخاص: ${n}${n>1?" (أعطهم أسماء سعودية/عربية مناسبة)":""}. الطول قرابة ${s*16} حرف (${s} ثانية).
+عدد الأشخاص: ${n}${n>1?" (أعطهم أسماء سعودية مناسبة للهجة)":""}. الطول قرابة ${s*16} حرف (${s} ثانية).
 ${RULES(d)}
 ارجع السكربت فقط، بدون مقدمة ولا شرح ولا علامات ماركداون.`}
 function fixPrompt(){
@@ -644,6 +703,7 @@ async function run(prompt,label){
 function clean(t){return t.replace(/^```[a-z]*\n?|```$/gm,"").trim()}
 $("#aiForm").addEventListener("submit",e=>{e.preventDefault();run(writePrompt(),"write")});
 fixBtn.onclick=()=>run(fixPrompt(),"fix");
+$("#pronBtn").onclick=()=>{const n=pronScan(ta.value).fixes.length; if(!n){toast("ما فيه كلمات تحتاج تشكيل");return} ta.value=applyPron(ta.value); update(); toast("شكّلت "+ar(n)+" كلمات")};
 
 // ---- Listen: ElevenLabs text-to-speech with the viewer's own key ----
 const lVoice=$("#lVoice"), lKey=$("#lKey"), lStatus=$("#lStatus"), takes=$("#takes");
@@ -676,6 +736,7 @@ function errText(st,body){
   if(st===429) return "طلبات كثيرة. انتظر دقيقة وجرب.";
   return "صار خطأ ("+st+"). "+msg.slice(0,140);
 }
+function prepText(t){return $("#lPron").checked?applyPron(t):t}
 async function tts(text,id,model,withLang){
   const body={text,model_id:model}; if(withLang) body.language_code="ar";
   let r;
@@ -702,7 +763,7 @@ function guard(){
 $("#lGen").onclick=async()=>{
   const text=$("#lText").value.trim(); if(!text){lStatus.textContent="اكتب نص أول.";return}
   if(!guard()) return; busy=true; lStatus.textContent="يولّد…";
-  try{const b=await tts(text,lVoice.value,$("#lModel").value,true); addTake(b,vName(lVoice.value),text); lStatus.textContent="تم. ولّد مرة ثانية لو تبي نسخة أحسن."}
+  try{const b=await tts(prepText(text),lVoice.value,$("#lModel").value,true); addTake(b,vName(lVoice.value),text); lStatus.textContent="تم. ولّد مرة ثانية لو تبي نسخة أحسن."}
   catch(e){lStatus.textContent=e.message||"تعذّر الاتصال بـ ElevenLabs."}
   finally{busy=false}
 };
@@ -714,7 +775,7 @@ $("#lAll").onclick=async()=>{
   busy=true; const parts=[];
   try{
     for(let i=0;i<p.lines.length;i++){const L=p.lines[i]; lStatus.textContent="يولّد جملة "+ar(i+1)+" من "+ar(p.lines.length)+" ("+L.speaker+")…";
-      parts.push(await tts(L.text,spkVoice[L.speaker],$("#lModel").value,true));
+      parts.push(await tts(prepText(L.text),spkVoice[L.speaker],$("#lModel").value,true));
       await new Promise(r=>setTimeout(r,700));}
     addTake(new Blob(parts,{type:"audio/mpeg"}),"الحوار كامل",p.lines.map(l=>l.spoken).join(" ")); lStatus.textContent="تم الحوار كامل.";
   }catch(e){lStatus.textContent=(e.message||"تعذّر الاتصال")+(parts.length?" (وقف بعد "+ar(parts.length)+" جمل)":"")}
