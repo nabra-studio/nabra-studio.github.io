@@ -122,6 +122,7 @@ select{appearance:auto}
 .vcard .meta{display:flex;flex-wrap:wrap;gap:6px}
 .pill{font-size:11.5px;padding:2px 9px;border-radius:999px;background:var(--bg);color:var(--muted)}
 .pill.kind{background:var(--tint);color:var(--accent);font-weight:600}
+.vcard.fav{border-color:var(--accent);background:var(--tint)}
 .vcard p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.7}
 .vcard .acts{display:flex;gap:6px;flex-wrap:wrap}
 .chip[aria-selected="true"],.chip.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
@@ -382,13 +383,13 @@ const DIALECTS=[["نجدي","Najdi"],["أبيض (سعودي عام)","White Saud
 const KINDS=[["all","الكل"],["girl","بنات"],["woman","نساء"],["oldf","عجايز"],["youngm","شباب"],["man","رجال"],["oldm","شياب"]];
 // Saudi-only. [kind, name, dialect, note, voice_id]
 const VOICES=[
+ ["youngm","Majed - Measured & Steady","نجدي","⭐ ماجد صاحبنا: الصوت المعتمد لفيديوهاتنا. هادي وثابت بنبرة نجدية، للسرد والشرح","oJCdZCYaJobw2GlrIQm5"],
  ["girl","Nouf - Saudi Commercial & Documentary","أبيض","شابة طبيعية، للإعلانات والسرد","VjxKp6w1MCufETfW5zFM"],
  ["girl","Hana - Casual & Relatable","حجازي","عفوية وخفيفة، للسوشال والفلوقات","kdUY91gH5xyDHapxlthT"],
  ["woman","Mona- Saudi Arabic Voice","أبيض","دافية وواثقة، للتعليق والبودكاست","o0oG1TnHDWDdKbAeBgCO"],
  ["woman","Layan - The Professional","نجدي","رزينة وثابتة، للحوار والمحتوى الرسمي","gVzwmdZzRgBrNjXaTmi5"],
  ["woman","Amal - Rich & Sophisticated","حجازي","فخمة وقريبة، للقصص والإعلانات","QtQamNJjpordEbNFIlz3"],
  ["oldf","Noorah-Saudi Warm & Clear","شرقاوي","كبيرة حنونة ودافية، للحكايات والشعر","ckaeRWMtCV0u0pUT3wX1"],
- ["youngm","Majed - Measured & Steady","نجدي","هادي وثابت، ممتاز للشرح والسرد","oJCdZCYaJobw2GlrIQm5"],
  ["youngm","Bandar","جنوبي","ودود وخفيف دم، للحوار والقصص","aLv8a8fbjjLsORNUDQ1J"],
  ["youngm","ZAID","أبيض","شبابي ودافي، للسوشال والسوالف","2ihxUjDCpcIKZE1cz08X"],
  ["youngm","ALI - Saudi Arabic & English","أبيض","معبّر، ينتقل بين الجد والمزح","Hvlnv5DwiIO2CQ6oYMZ3"],
@@ -630,6 +631,7 @@ function voiceOptions(sel){return '<option value="">اختر صوت…</option>'
 function drawCast(p){
   const box=$("#castList"); if(!box) return; box.innerHTML="";
   const sp=p.speakers.filter(s=>p.lines.some(l=>l.speaker===s));
+  if(sp.length && !Object.values(spkVoice).includes("oJCdZCYaJobw2GlrIQm5") && !spkVoice[sp[0]]) spkVoice[sp[0]]="oJCdZCYaJobw2GlrIQm5";
   if(!sp.length){box.innerHTML='<p class="hint">اكتب أو الصق الحوار في خانة «السكربت» فوق.</p>';return}
   sp.forEach((s,i)=>{
     const r=document.createElement("div");r.className="castrow";
@@ -693,7 +695,7 @@ function drawVoices(){
   const list=VOICES.filter(v=>(vKind==="all"||v[0]===vKind)&&(vDial==="all"||v[2]===vDial));
   if(!list.length){const e=document.createElement("p");e.className="hint";e.textContent="ما فيه صوت جاهز بهذا النوع واللهجة. صمّمه من القسم اللي تحت.";g.appendChild(e)}
   list.forEach(([k,n,d,t,id])=>{
-    const c=document.createElement("article");c.className="vcard";
+    const c=document.createElement("article");c.className="vcard"+(id==="oJCdZCYaJobw2GlrIQm5"?" fav":"");
     c.innerHTML=`<div class="top"><div class="vn"></div></div><div class="meta"><span class="pill kind"></span><span class="pill"></span></div><p></p><div class="acts"></div>`;
     c.querySelector(".vn").textContent=n; c.querySelector(".pill.kind").textContent=KLABEL[k]; c.querySelectorAll(".pill")[1].textContent=d; c.querySelector("p").textContent=t;
     const a=c.querySelector(".acts");
@@ -807,6 +809,7 @@ $("#pronBtn").onclick=()=>{const n=pronScan(ta.value).fixes.length; if(!n){toast
 // ---- Listen: ElevenLabs text-to-speech with the viewer's own key ----
 const lVoice=$("#lVoice"), lKey=$("#lKey"), lStatus=$("#lStatus"), takes=$("#takes");
 lVoice.innerHTML=KINDS.slice(1).map(([k,l])=>'<optgroup label="'+l+'">'+VOICES.filter(v=>v[0]===k&&v[4]).map(v=>'<option value="'+v[4]+'">'+esc(v[1])+' · '+esc(v[2])+'</option>').join("")+'</optgroup>').join("");
+lVoice.value="oJCdZCYaJobw2GlrIQm5";
 const vName=id=>(VOICES.find(v=>v[4]===id)||[,id])[1];
 let player=null, busy=false;
 function playPreview(id,btn){
